@@ -159,7 +159,7 @@ function formatDuration(seconds: number): string {
 
             <!-- Duration -->
             <span class="flex-shrink-0 text-xs tabular-nums text-text-muted">
-              {{ formatDuration(track.duration) }}
+              {{ formatDuration(track.duration_seconds) }}
             </span>
 
             <!-- Remove button -->
