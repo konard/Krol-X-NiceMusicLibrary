@@ -1,6 +1,0 @@
-export { default as AudioPlayer } from './AudioPlayer.vue'
-export { default as NowPlaying } from './NowPlaying.vue'
-export { default as PlayerControls } from './PlayerControls.vue'
-export { default as ProgressBar } from './ProgressBar.vue'
-export { default as VolumeControl } from './VolumeControl.vue'
-export { default as QueuePanel } from './QueuePanel.vue'
