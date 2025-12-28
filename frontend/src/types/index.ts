@@ -35,22 +35,92 @@ export interface RegisterCredentials {
   password: string
 }
 
-// Track types
-export interface Track {
-  id: number
+// Song/Track types - matches backend SongResponse schema
+export interface Song {
+  id: string // UUID
   title: string
-  artist: string
+  artist: string | null
+  album: string | null
+  genre: string | null
+  year: number | null
+  duration_seconds: number
+  file_format: string
+  play_count: number
+  last_played_at: string | null
+  is_favorite: boolean
+  rating: number | null
+  cover_art_path: string | null
+  created_at: string
+}
+
+// Extended song details - matches backend SongDetailResponse schema
+export interface SongDetail extends Song {
+  album_artist: string | null
+  track_number: number | null
+  disc_number: number | null
+  file_size_bytes: number
+  bitrate: number | null
+  sample_rate: number | null
+  lyrics: string | null
+  bpm: number | null
+  energy: number | null
+  valence: number | null
+}
+
+// Song update - matches backend SongUpdate schema
+export interface SongUpdate {
+  title?: string
+  artist?: string
   album?: string
-  duration: number // in seconds
-  file_path: string
-  cover_url?: string
   genre?: string
   year?: number
-  play_count: number
-  is_favorite: boolean
-  created_at: string
-  updated_at: string
+  lyrics?: string
+  is_favorite?: boolean
+  rating?: number
 }
+
+// Song upload response - matches backend SongUploadResponse schema
+export interface SongUploadResponse {
+  id: string
+  title: string
+  artist: string | null
+  status?: string
+  message?: string
+}
+
+// Batch upload response - matches backend SongBatchUploadResponse schema
+export interface SongBatchUploadResponse {
+  songs: SongUploadResponse[]
+  errors: Array<{ filename: string; error: string }>
+  total_files: number
+  successful: number
+  failed: number
+}
+
+// Song list response - matches backend SongListResponse schema
+export interface SongListResponse {
+  items: Song[]
+  total: number
+  page: number
+  limit: number
+  pages: number
+}
+
+// Song filters - matches backend SongFilters schema
+export interface SongFilters {
+  search?: string
+  artist?: string
+  album?: string
+  genre?: string
+  is_favorite?: boolean
+  year_from?: number
+  year_to?: number
+  sort?: 'title' | 'artist' | 'album' | 'created_at' | 'play_count' | 'last_played_at'
+  order?: 'asc' | 'desc'
+}
+
+// Legacy Track alias for backward compatibility
+export type Track = Song
 
 // Playlist types
 export interface Playlist {
