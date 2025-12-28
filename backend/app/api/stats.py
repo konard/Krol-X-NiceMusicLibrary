@@ -1,16 +1,19 @@
 """Statistics API endpoints."""
 
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import CurrentUser
 from app.db.session import get_db
+from app.models.song import Song
 from app.schemas.song import SongResponse
 from app.schemas.stats import (
     ContextType,
+    DailyListeningCount,
+    HourlyListeningCount,
     ListeningHistoryItemResponse,
     ListeningHistoryResponse,
     PlayRecordRequest,
@@ -170,13 +173,15 @@ async def get_overview(
         period=period,
     )
     return StatsOverviewResponse(
-        total_plays=int(overview["total_plays"]),  # type: ignore[arg-type]
-        total_duration_seconds=int(overview["total_duration_seconds"]),  # type: ignore[arg-type]
-        unique_songs=int(overview["unique_songs"]),  # type: ignore[arg-type]
-        unique_artists=int(overview["unique_artists"]),  # type: ignore[arg-type]
-        most_played_genre=overview["most_played_genre"],  # type: ignore[arg-type]
-        listening_by_hour=overview["listening_by_hour"],  # type: ignore[arg-type]
-        listening_by_day=overview["listening_by_day"],  # type: ignore[arg-type]
+        total_plays=cast(int, overview["total_plays"]),
+        total_duration_seconds=cast(int, overview["total_duration_seconds"]),
+        unique_songs=cast(int, overview["unique_songs"]),
+        unique_artists=cast(int, overview["unique_artists"]),
+        most_played_genre=cast(str | None, overview["most_played_genre"]),
+        listening_by_hour=cast(
+            list[HourlyListeningCount], overview["listening_by_hour"]
+        ),
+        listening_by_day=cast(list[DailyListeningCount], overview["listening_by_day"]),
     )
 
 
@@ -218,8 +223,8 @@ async def get_top_songs(
 
     items = [
         TopSongItem(
-            song=SongResponse.model_validate(item["song"]),
-            play_count=int(item["play_count"]),  # type: ignore[arg-type]
+            song=SongResponse.model_validate(cast(Song, item["song"])),
+            play_count=cast(int, item["play_count"]),
         )
         for item in top_songs
     ]
@@ -265,11 +270,11 @@ async def get_top_artists(
 
     items = [
         TopArtistItem(
-            artist=str(item["artist"]),
-            play_count=int(item["play_count"]),  # type: ignore[arg-type]
+            artist=cast(str, item["artist"]),
+            play_count=cast(int, item["play_count"]),
             songs=[
                 SongResponse.model_validate(song)
-                for song in item["songs"]  # type: ignore[union-attr]
+                for song in cast(list[Song], item["songs"])
             ],
         )
         for item in top_artists
