@@ -70,6 +70,10 @@ class MoodChain(Base, UUIDMixin, TimestampMixin):
         default=TransitionStyle.SMOOTH,
         nullable=False,
     )
+    auto_advance: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    auto_advance_delay_seconds: Mapped[int] = mapped_column(
+        Integer, default=10, nullable=False
+    )
     song_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     play_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     last_played_at: Mapped[datetime | None] = mapped_column(
@@ -84,6 +88,11 @@ class MoodChain(Base, UUIDMixin, TimestampMixin):
         back_populates="mood_chain",
         cascade="all, delete-orphan",
         order_by="MoodChainSong.position",
+    )
+    mood_chain_transitions: Mapped[list["MoodChainTransition"]] = relationship(
+        "MoodChainTransition",
+        back_populates="mood_chain",
+        cascade="all, delete-orphan",
     )
 
     __table_args__ = (
@@ -123,4 +132,61 @@ class MoodChainSong(Base, UUIDMixin):
     __table_args__ = (
         Index("ix_mood_chain_songs_position", "mood_chain_id", "position"),
         Index("ix_mood_chain_songs_chain_song", "mood_chain_id", "song_id"),
+    )
+
+
+class MoodChainTransition(Base, UUIDMixin):
+    """Mood chain transition weights model.
+
+    Stores the weighted transitions between songs in a mood chain.
+    Weights are used to determine the probability of transitioning
+    from one song to another.
+    """
+
+    __tablename__ = "mood_chain_transitions"
+
+    mood_chain_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("mood_chains.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    from_song_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("songs.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    to_song_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("songs.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    weight: Mapped[float] = mapped_column(Float, default=0.5, nullable=False)
+    play_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+
+    # Relationships
+    mood_chain: Mapped["MoodChain"] = relationship(
+        "MoodChain", back_populates="mood_chain_transitions"
+    )
+    from_song: Mapped["Song"] = relationship(
+        "Song",
+        foreign_keys=[from_song_id],
+    )
+    to_song: Mapped["Song"] = relationship(
+        "Song",
+        foreign_keys=[to_song_id],
+    )
+
+    __table_args__ = (
+        Index(
+            "ix_mood_chain_transitions_chain_from",
+            "mood_chain_id",
+            "from_song_id",
+        ),
+        Index(
+            "ix_mood_chain_transitions_chain_from_to",
+            "mood_chain_id",
+            "from_song_id",
+            "to_song_id",
+            unique=True,
+        ),
     )
