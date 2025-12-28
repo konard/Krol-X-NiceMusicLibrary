@@ -167,7 +167,88 @@ export interface PlayerState {
   queueIndex: number
 }
 
-// Statistics types
+// Statistics types - matches backend schemas/stats.py
+
+export type StatsPeriod = 'day' | 'week' | 'month' | 'year' | 'all'
+
+export type ContextType = 'library' | 'playlist' | 'mood_chain' | 'search' | 'recommendation'
+
+export interface HourlyListeningCount {
+  hour: number
+  count: number
+}
+
+export interface DailyListeningCount {
+  day: string // ISO format date string (YYYY-MM-DD)
+  count: number
+}
+
+export interface StatsOverview {
+  total_plays: number
+  total_duration_seconds: number
+  unique_songs: number
+  unique_artists: number
+  most_played_genre: string | null
+  listening_by_hour: HourlyListeningCount[]
+  listening_by_day: DailyListeningCount[]
+}
+
+export interface TopSongItem {
+  song: Song
+  play_count: number
+}
+
+export interface TopSongsResponse {
+  items: TopSongItem[]
+}
+
+export interface TopArtistItem {
+  artist: string
+  play_count: number
+  songs: Song[]
+}
+
+export interface TopArtistsResponse {
+  items: TopArtistItem[]
+}
+
+export interface ListeningHistoryItem {
+  id: string
+  song_id: string
+  played_at: string
+  played_duration_seconds: number | null
+  completed: boolean
+  skipped: boolean
+  context_type: ContextType | null
+  context_id: string | null
+  device_type: string | null
+  song: Song
+}
+
+export interface ListeningHistoryResponse {
+  items: ListeningHistoryItem[]
+  total: number
+  page: number
+  limit: number
+  pages: number
+}
+
+export interface PlayRecordRequest {
+  song_id: string
+  duration_listened_seconds: number
+  completed?: boolean
+  context_type?: ContextType
+  context_id?: string
+  device_type?: string
+}
+
+export interface PlayRecordResponse {
+  success: boolean
+  id: string
+  played_at: string
+}
+
+// Legacy types for backward compatibility
 export interface ListeningStats {
   total_hours: number
   total_plays: number
