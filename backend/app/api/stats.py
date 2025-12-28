@@ -169,7 +169,15 @@ async def get_overview(
         user_id=current_user.id,
         period=period,
     )
-    return StatsOverviewResponse(**overview)
+    return StatsOverviewResponse(
+        total_plays=int(overview["total_plays"]),  # type: ignore[arg-type]
+        total_duration_seconds=int(overview["total_duration_seconds"]),  # type: ignore[arg-type]
+        unique_songs=int(overview["unique_songs"]),  # type: ignore[arg-type]
+        unique_artists=int(overview["unique_artists"]),  # type: ignore[arg-type]
+        most_played_genre=overview["most_played_genre"],  # type: ignore[arg-type]
+        listening_by_hour=overview["listening_by_hour"],  # type: ignore[arg-type]
+        listening_by_day=overview["listening_by_day"],  # type: ignore[arg-type]
+    )
 
 
 @router.get(
@@ -211,7 +219,7 @@ async def get_top_songs(
     items = [
         TopSongItem(
             song=SongResponse.model_validate(item["song"]),
-            play_count=item["play_count"],
+            play_count=int(item["play_count"]),  # type: ignore[arg-type]
         )
         for item in top_songs
     ]
@@ -257,9 +265,12 @@ async def get_top_artists(
 
     items = [
         TopArtistItem(
-            artist=item["artist"],
-            play_count=item["play_count"],
-            songs=[SongResponse.model_validate(song) for song in item["songs"]],
+            artist=str(item["artist"]),
+            play_count=int(item["play_count"]),  # type: ignore[arg-type]
+            songs=[
+                SongResponse.model_validate(song)
+                for song in item["songs"]  # type: ignore[union-attr]
+            ],
         )
         for item in top_artists
     ]

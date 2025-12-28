@@ -14,16 +14,19 @@ logger = logging.getLogger(__name__)
 class CacheService:
     """Service for caching data in Redis."""
 
-    def __init__(self, redis_client: redis.Redis[str] | None = None) -> None:
+    def __init__(
+        self,
+        redis_client: redis.Redis | None = None,  # type: ignore[type-arg]
+    ) -> None:
         """Initialize cache service.
 
         Args:
             redis_client: Redis client instance. If None, creates a new one.
         """
-        self._client: redis.Redis[str] | None = redis_client
+        self._client: redis.Redis | None = redis_client  # type: ignore[type-arg]
         self._connected = False
 
-    async def _get_client(self) -> redis.Redis[str] | None:
+    async def _get_client(self) -> redis.Redis | None:  # type: ignore[type-arg]
         """Get or create Redis client.
 
         Returns:
@@ -33,7 +36,7 @@ class CacheService:
             return self._client
 
         try:
-            self._client = redis.from_url(  # type: ignore[assignment]
+            self._client = redis.from_url(  # type: ignore[no-untyped-call]
                 settings.redis_url,
                 encoding="utf-8",
                 decode_responses=True,
