@@ -453,10 +453,10 @@ export const usePlayerStore = defineStore('player', () => {
 
     navigator.mediaSession.metadata = new MediaMetadata({
       title: currentTrack.value.title,
-      artist: currentTrack.value.artist,
+      artist: currentTrack.value.artist ?? undefined,
       album: currentTrack.value.album || '',
-      artwork: currentTrack.value.cover_url ? [
-        { src: currentTrack.value.cover_url, sizes: '512x512', type: 'image/jpeg' }
+      artwork: currentTrack.value.cover_art_path ? [
+        { src: currentTrack.value.cover_art_path, sizes: '512x512', type: 'image/jpeg' }
       ] : []
     })
 

@@ -9,14 +9,14 @@ const track = computed(() => playerStore.currentTrack)
 // Cover image URL
 const coverUrl = computed(() => {
   if (!track.value) return null
-  if (track.value.cover_url) return track.value.cover_url
+  if (track.value.cover_art_path) return track.value.cover_art_path
   // Generate API URL for cover if file_path exists
   const baseUrl = import.meta.env.VITE_API_URL || '/api/v1'
   return `${baseUrl}/songs/${track.value.id}/cover`
 })
 
 // Placeholder SVG for missing cover
-const showPlaceholder = computed(() => !track.value?.cover_url)
+const showPlaceholder = computed(() => !track.value?.cover_art_path)
 </script>
 
 <template>
