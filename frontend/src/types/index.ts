@@ -172,18 +172,123 @@ export interface PlaylistListResponse {
   pages: number
 }
 
-// Mood chain types
+// Mood chain types - matches backend schemas/mood_chain.py
+export type TransitionStyle = 'smooth' | 'random' | 'energy_flow' | 'genre_match'
+
+export interface MoodChainSong {
+  song_id: string
+  position: number
+  transition_weight: number
+  added_at: string
+  title: string
+  artist: string | null
+  album: string | null
+  duration_seconds: number
+  cover_art_path: string | null
+  energy: number | null
+  valence: number | null
+  bpm: number | null
+  genre: string | null
+}
+
+export interface MoodChainTransition {
+  id: string
+  from_song_id: string
+  to_song_id: string
+  weight: number
+  play_count: number
+}
 export interface MoodChain {
-  id: number
+  id: string
   name: string
-  description?: string
-  tags: string[]
-  transition_style: 'smooth' | 'energetic' | 'random'
-  tracks: MoodChainTrack[]
+  description: string | null
+  cover_image_path: string | null
+  transition_style: TransitionStyle
+  auto_advance: boolean
+  auto_advance_delay_seconds: number
+  is_auto_generated: boolean
+  song_count: number
+  play_count: number
+  last_played_at: string | null
   created_at: string
   updated_at: string
 }
 
+export interface MoodChainDetail extends MoodChain {
+  songs: MoodChainSong[]
+  transitions: MoodChainTransition[]
+}
+
+export interface MoodChainListResponse {
+  items: MoodChain[]
+  total: number
+  page: number
+  limit: number
+  pages: number
+}
+
+export interface MoodChainCreate {
+  name: string
+  description?: string | null
+  transition_style?: TransitionStyle
+  auto_advance?: boolean
+  auto_advance_delay_seconds?: number
+  song_ids?: string[]
+}
+
+export interface MoodChainUpdate {
+  name?: string
+  description?: string | null
+  transition_style?: TransitionStyle
+  auto_advance?: boolean
+  auto_advance_delay_seconds?: number
+  cover_image_path?: string | null
+}
+
+export interface MoodChainFromHistoryRequest {
+  name: string
+  description?: string | null
+  from_date?: string
+  to_date?: string
+  min_plays?: number
+}
+
+export interface AddSongToMoodChainRequest {
+  song_id: string
+  position?: number
+}
+
+export interface TransitionUpdate {
+  from_song_id: string
+  to_song_id: string
+  weight: number
+}
+
+export interface UpdateTransitionsRequest {
+  transitions: TransitionUpdate[]
+}
+
+export interface NextSongSuggestion {
+  song_id: string
+  title: string
+  artist: string | null
+  album: string | null
+  duration_seconds: number
+  cover_art_path: string | null
+  weight: number
+  reason: string
+}
+
+export interface NextSongResponse {
+  suggestions: NextSongSuggestion[]
+}
+
+export interface TransitionPlayedRequest {
+  from_song_id: string
+  to_song_id: string
+}
+
+// Legacy types for backward compatibility
 export interface MoodChainTrack {
   track: Track
   position: number
