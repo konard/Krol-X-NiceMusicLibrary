@@ -214,7 +214,7 @@ class StatsService:
         self,
         user_id: UUID,
         period: StatsPeriod = StatsPeriod.ALL,
-    ) -> dict:
+    ) -> dict[str, object]:
         """Get statistics overview.
 
         Args:
@@ -235,7 +235,7 @@ class StatsService:
             cached["listening_by_day"] = [
                 DailyListeningCount(**d) for d in cached.get("listening_by_day", [])
             ]
-            return cached
+            return dict(cached)
 
         period_start = self._get_period_start(period)
 
@@ -355,7 +355,7 @@ class StatsService:
         user_id: UUID,
         period: StatsPeriod = StatsPeriod.ALL,
         limit: int = 10,
-    ) -> list[dict]:
+    ) -> list[dict[str, object]]:
         """Get top songs by play count.
 
         Args:
@@ -390,7 +390,7 @@ class StatsService:
         user_id: UUID,
         period: StatsPeriod = StatsPeriod.ALL,
         limit: int = 10,
-    ) -> list[dict]:
+    ) -> list[dict[str, object]]:
         """Get top artists by play count.
 
         Args:
