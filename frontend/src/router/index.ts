@@ -16,6 +16,8 @@ const LibraryView = () => import('@/pages/LibraryView.vue')
 const StatsView = () => import('@/pages/StatsView.vue')
 const SettingsView = () => import('@/pages/SettingsView.vue')
 const NotFoundView = () => import('@/pages/NotFoundView.vue')
+const MoodChainsView = () => import('@/pages/MoodChainsView.vue')
+const MoodChainView = () => import('@/pages/MoodChainView.vue')
 
 const routes: RouteRecordRaw[] = [
   {
@@ -68,6 +70,25 @@ const routes: RouteRecordRaw[] = [
     component: SettingsView,
     meta: {
       title: 'Settings',
+    },
+  },
+  // Mood chain routes
+  {
+    path: '/mood-chains',
+    name: 'mood-chains',
+    component: MoodChainsView,
+    meta: {
+      title: 'Mood Chains',
+      requiresAuth: true,
+    },
+  },
+  {
+    path: '/mood-chains/:id',
+    name: 'mood-chain',
+    component: MoodChainView,
+    meta: {
+      title: 'Mood Chain',
+      requiresAuth: true,
     },
   },
   // Placeholder routes - to be implemented in future issues
