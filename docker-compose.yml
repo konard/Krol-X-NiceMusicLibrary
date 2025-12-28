@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: nicemusiclib-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-nicemusiclib}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nicemusiclib}
+      POSTGRES_DB: ${POSTGRES_DB:-nicemusiclib}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nicemusiclib}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nicemusiclib-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: nicemusiclib-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nicemusiclib-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      target: development
+    container_name: nicemusiclib-backend
+    environment:
+      - DEBUG=true
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=${POSTGRES_USER:-nicemusiclib}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-nicemusiclib}
+      - POSTGRES_DB=${POSTGRES_DB:-nicemusiclib}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}
+    volumes:
+      - ./backend:/app
+      - backend_uploads:/app/uploads
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - nicemusiclib-network
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      target: development
+    container_name: nicemusiclib-frontend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    networks:
+      - nicemusiclib-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  backend_uploads:
+
+networks:
+  nicemusiclib-network:
+    driver: bridge
