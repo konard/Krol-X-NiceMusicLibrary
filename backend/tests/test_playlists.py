@@ -168,9 +168,7 @@ async def test_playlist(db_session: AsyncSession, test_user: User) -> Playlist:
 class TestPlaylistService:
     """Tests for PlaylistService."""
 
-    async def test_create_playlist(
-        self, db_session: AsyncSession, test_user: User
-    ):
+    async def test_create_playlist(self, db_session: AsyncSession, test_user: User):
         """Test creating a playlist."""
         service = PlaylistService(db_session)
         data = PlaylistCreate(name="New Playlist", description="My playlist")
@@ -218,9 +216,7 @@ class TestPlaylistService:
         """Test updating playlist."""
         service = PlaylistService(db_session)
         data = PlaylistUpdate(name="Updated Name", is_public=True)
-        playlist = await service.update_playlist(
-            test_playlist.id, test_user.id, data
-        )
+        playlist = await service.update_playlist(test_playlist.id, test_user.id, data)
 
         assert playlist.name == "Updated Name"
         assert playlist.is_public is True
@@ -285,9 +281,7 @@ class TestPlaylistService:
         service = PlaylistService(db_session)
 
         # Add first song
-        await service.add_song_to_playlist(
-            test_playlist.id, test_song.id, test_user.id
-        )
+        await service.add_song_to_playlist(test_playlist.id, test_song.id, test_user.id)
 
         # Add second song at position 0
         playlist = await service.add_song_to_playlist(
@@ -310,9 +304,7 @@ class TestPlaylistService:
     ):
         """Test adding duplicate song to playlist."""
         service = PlaylistService(db_session)
-        await service.add_song_to_playlist(
-            test_playlist.id, test_song.id, test_user.id
-        )
+        await service.add_song_to_playlist(test_playlist.id, test_song.id, test_user.id)
 
         with pytest.raises(SongAlreadyInPlaylistError):
             await service.add_song_to_playlist(
@@ -326,9 +318,7 @@ class TestPlaylistService:
         service = PlaylistService(db_session)
 
         with pytest.raises(SongNotFoundError):
-            await service.add_song_to_playlist(
-                test_playlist.id, uuid4(), test_user.id
-            )
+            await service.add_song_to_playlist(test_playlist.id, uuid4(), test_user.id)
 
     async def test_remove_song_from_playlist(
         self,
@@ -339,9 +329,7 @@ class TestPlaylistService:
     ):
         """Test removing song from playlist."""
         service = PlaylistService(db_session)
-        await service.add_song_to_playlist(
-            test_playlist.id, test_song.id, test_user.id
-        )
+        await service.add_song_to_playlist(test_playlist.id, test_song.id, test_user.id)
 
         playlist = await service.remove_song_from_playlist(
             test_playlist.id, test_song.id, test_user.id
@@ -377,9 +365,7 @@ class TestPlaylistService:
         service = PlaylistService(db_session)
 
         # Add songs
-        await service.add_song_to_playlist(
-            test_playlist.id, test_song.id, test_user.id
-        )
+        await service.add_song_to_playlist(test_playlist.id, test_song.id, test_user.id)
         await service.add_song_to_playlist(
             test_playlist.id, test_song2.id, test_user.id
         )
@@ -404,9 +390,7 @@ class TestPlaylistService:
     ):
         """Test reordering with invalid song IDs."""
         service = PlaylistService(db_session)
-        await service.add_song_to_playlist(
-            test_playlist.id, test_song.id, test_user.id
-        )
+        await service.add_song_to_playlist(test_playlist.id, test_song.id, test_user.id)
 
         with pytest.raises(ValueError):
             await service.reorder_playlist_songs(

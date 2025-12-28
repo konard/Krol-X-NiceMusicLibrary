@@ -86,9 +86,7 @@ class TagService:
             List of tags.
         """
         result = await self.db.execute(
-            select(Tag)
-            .where(Tag.owner_id == owner_id)
-            .order_by(Tag.name.asc())
+            select(Tag).where(Tag.owner_id == owner_id).order_by(Tag.name.asc())
         )
         return list(result.scalars().all())
 
@@ -108,9 +106,7 @@ class TagService:
         # Check for existing tag with same name
         existing = await self.get_tag_by_name(data.name, owner_id)
         if existing:
-            raise TagAlreadyExistsError(
-                f"Tag with name '{data.name}' already exists"
-            )
+            raise TagAlreadyExistsError(f"Tag with name '{data.name}' already exists")
 
         tag = Tag(
             owner_id=owner_id,
@@ -121,9 +117,7 @@ class TagService:
         await self.db.flush()
         return tag
 
-    async def update_tag(
-        self, tag_id: UUID, owner_id: UUID, data: TagUpdate
-    ) -> Tag:
+    async def update_tag(self, tag_id: UUID, owner_id: UUID, data: TagUpdate) -> Tag:
         """Update a tag.
 
         Args:
@@ -206,9 +200,7 @@ class TagService:
         )
         return result.scalar_one_or_none()
 
-    async def _get_song_tag(
-        self, song_id: UUID, tag_id: UUID
-    ) -> SongTag | None:
+    async def _get_song_tag(self, song_id: UUID, tag_id: UUID) -> SongTag | None:
         """Get a song-tag association.
 
         Args:
@@ -258,9 +250,7 @@ class TagService:
         # Check if tag is already on song
         existing = await self._get_song_tag(song_id, tag_id)
         if existing:
-            raise TagAlreadyOnSongError(
-                f"Tag {tag_id} is already on song {song_id}"
-            )
+            raise TagAlreadyOnSongError(f"Tag {tag_id} is already on song {song_id}")
 
         song_tag = SongTag(song_id=song_id, tag_id=tag_id)
         self.db.add(song_tag)
@@ -294,18 +284,14 @@ class TagService:
 
         song_tag = await self._get_song_tag(song_id, tag_id)
         if not song_tag:
-            raise TagNotOnSongError(
-                f"Tag {tag_id} is not on song {song_id}"
-            )
+            raise TagNotOnSongError(f"Tag {tag_id} is not on song {song_id}")
 
         await self.db.delete(song_tag)
         await self.db.flush()
 
         return await self._get_song_with_tags(song_id, owner_id)  # type: ignore
 
-    async def get_song_with_tags(
-        self, song_id: UUID, owner_id: UUID
-    ) -> Song | None:
+    async def get_song_with_tags(self, song_id: UUID, owner_id: UUID) -> Song | None:
         """Get a song with its tags (public method).
 
         Args:

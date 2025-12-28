@@ -70,9 +70,7 @@ async def list_tags(
     tag_service = TagService(db)
     tags = await tag_service.get_tags(owner_id=current_user.id)
 
-    return TagListResponse(
-        items=[TagResponse.model_validate(t) for t in tags]
-    )
+    return TagListResponse(items=[TagResponse.model_validate(t) for t in tags])
 
 
 @router.post(

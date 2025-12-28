@@ -117,9 +117,7 @@ class PlaylistService:
 
         return playlists, total
 
-    async def create_playlist(
-        self, owner_id: UUID, data: PlaylistCreate
-    ) -> Playlist:
+    async def create_playlist(self, owner_id: UUID, data: PlaylistCreate) -> Playlist:
         """Create a new playlist.
 
         Args:
@@ -227,7 +225,9 @@ class PlaylistService:
         result = await self.db.execute(
             select(
                 func.count(PlaylistSong.id).label("song_count"),
-                func.coalesce(func.sum(Song.duration_seconds), 0).label("total_duration"),
+                func.coalesce(func.sum(Song.duration_seconds), 0).label(
+                    "total_duration"
+                ),
             )
             .select_from(PlaylistSong)
             .join(Song, PlaylistSong.song_id == Song.id)
@@ -387,9 +387,7 @@ class PlaylistService:
         # Verify all songs are in playlist
         current_song_ids = {ps.song_id for ps in playlist.playlist_songs}
         if set(song_ids) != current_song_ids:
-            raise ValueError(
-                "Provided song IDs don't match songs in playlist"
-            )
+            raise ValueError("Provided song IDs don't match songs in playlist")
 
         # Update positions
         for position, song_id in enumerate(song_ids):

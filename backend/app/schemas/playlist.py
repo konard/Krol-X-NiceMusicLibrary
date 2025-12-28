@@ -103,6 +103,4 @@ class AddSongToPlaylistRequest(BaseModel):
 class ReorderPlaylistSongsRequest(BaseModel):
     """Schema for reordering songs in a playlist."""
 
-    song_ids: list[UUID] = Field(
-        description="List of song IDs in the new order"
-    )
+    song_ids: list[UUID] = Field(description="List of song IDs in the new order")

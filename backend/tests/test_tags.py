@@ -299,9 +299,7 @@ class TestTagService:
     ):
         """Test adding tag to song."""
         service = TagService(db_session)
-        song = await service.add_tag_to_song(
-            test_song.id, test_tag.id, test_user.id
-        )
+        song = await service.add_tag_to_song(test_song.id, test_tag.id, test_user.id)
 
         assert len(song.song_tags) == 1
         assert song.song_tags[0].tag.id == test_tag.id
@@ -366,9 +364,7 @@ class TestTagService:
         service = TagService(db_session)
 
         with pytest.raises(TagNotOnSongError):
-            await service.remove_tag_from_song(
-                test_song.id, test_tag.id, test_user.id
-            )
+            await service.remove_tag_from_song(test_song.id, test_tag.id, test_user.id)
 
 
 class TestTagsEndpoints:
@@ -455,9 +451,7 @@ class TestTagsEndpoints:
         assert data["name"] == "Updated Rock"
         assert data["color"] == "#0000FF"
 
-    async def test_update_tag_not_found(
-        self, client: AsyncClient, auth_headers: dict
-    ):
+    async def test_update_tag_not_found(self, client: AsyncClient, auth_headers: dict):
         """Test updating non-existent tag returns 404."""
         response = await client.patch(
             f"/api/v1/tags/{uuid4()}",
@@ -477,13 +471,9 @@ class TestTagsEndpoints:
 
         assert response.status_code == 204
 
-    async def test_delete_tag_not_found(
-        self, client: AsyncClient, auth_headers: dict
-    ):
+    async def test_delete_tag_not_found(self, client: AsyncClient, auth_headers: dict):
         """Test deleting non-existent tag returns 404."""
-        response = await client.delete(
-            f"/api/v1/tags/{uuid4()}", headers=auth_headers
-        )
+        response = await client.delete(f"/api/v1/tags/{uuid4()}", headers=auth_headers)
 
         assert response.status_code == 404
 
