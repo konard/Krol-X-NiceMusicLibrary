@@ -183,21 +183,27 @@ class TagService:
         )
         return result.scalar_one_or_none()
 
-    async def _get_song_with_tags(self, song_id: UUID, owner_id: UUID) -> Song | None:
+    async def _get_song_with_tags(
+        self, song_id: UUID, owner_id: UUID, *, refresh: bool = False
+    ) -> Song | None:
         """Get a song with its tags.
 
         Args:
             song_id: Song UUID.
             owner_id: Owner UUID.
+            refresh: Force fresh data by bypassing identity map cache.
 
         Returns:
             Song with tags if found, None otherwise.
         """
-        result = await self.db.execute(
+        query = (
             select(Song)
             .where(Song.id == song_id, Song.owner_id == owner_id)
             .options(selectinload(Song.song_tags).selectinload(SongTag.tag))
         )
+        if refresh:
+            query = query.execution_options(populate_existing=True)
+        result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
     async def _get_song_tag(self, song_id: UUID, tag_id: UUID) -> SongTag | None:
@@ -256,9 +262,8 @@ class TagService:
         self.db.add(song_tag)
         await self.db.flush()
 
-        # Expire cached data to ensure fresh fetch
-        self.db.expire_all()
-        return await self._get_song_with_tags(song_id, owner_id)  # type: ignore
+        # Fetch fresh data with refresh=True to bypass identity map cache
+        return await self._get_song_with_tags(song_id, owner_id, refresh=True)  # type: ignore
 
     async def remove_tag_from_song(
         self,
@@ -291,9 +296,8 @@ class TagService:
         await self.db.delete(song_tag)
         await self.db.flush()
 
-        # Expire cached data to ensure fresh fetch
-        self.db.expire_all()
-        return await self._get_song_with_tags(song_id, owner_id)  # type: ignore
+        # Fetch fresh data with refresh=True to bypass identity map cache
+        return await self._get_song_with_tags(song_id, owner_id, refresh=True)  # type: ignore
 
     async def get_song_with_tags(self, song_id: UUID, owner_id: UUID) -> Song | None:
         """Get a song with its tags (public method).

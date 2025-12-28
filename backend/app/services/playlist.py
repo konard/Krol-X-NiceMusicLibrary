@@ -62,24 +62,28 @@ class PlaylistService:
         return result.scalar_one_or_none()
 
     async def get_playlist_with_songs(
-        self, playlist_id: UUID, owner_id: UUID
+        self, playlist_id: UUID, owner_id: UUID, *, refresh: bool = False
     ) -> Playlist | None:
         """Get a playlist with its songs.
 
         Args:
             playlist_id: Playlist UUID.
             owner_id: Owner UUID.
+            refresh: Force fresh data by bypassing identity map cache.
 
         Returns:
             Playlist with songs if found, None otherwise.
         """
-        result = await self.db.execute(
+        query = (
             select(Playlist)
             .where(Playlist.id == playlist_id, Playlist.owner_id == owner_id)
             .options(
                 selectinload(Playlist.playlist_songs).selectinload(PlaylistSong.song)
             )
         )
+        if refresh:
+            query = query.execution_options(populate_existing=True)
+        result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
     async def get_playlists(
@@ -308,9 +312,8 @@ class PlaylistService:
         await self._recalculate_playlist_stats(playlist)
         await self.db.flush()
 
-        # Expire cached data to ensure fresh fetch
-        self.db.expire_all()
-        return await self.get_playlist_with_songs(playlist_id, owner_id)  # type: ignore
+        # Fetch fresh data with refresh=True to bypass identity map cache
+        return await self.get_playlist_with_songs(playlist_id, owner_id, refresh=True)  # type: ignore
 
     async def remove_song_from_playlist(
         self,
@@ -364,9 +367,8 @@ class PlaylistService:
         await self._recalculate_playlist_stats(playlist)
         await self.db.flush()
 
-        # Expire cached data to ensure fresh fetch
-        self.db.expire_all()
-        return await self.get_playlist_with_songs(playlist_id, owner_id)  # type: ignore
+        # Fetch fresh data with refresh=True to bypass identity map cache
+        return await self.get_playlist_with_songs(playlist_id, owner_id, refresh=True)  # type: ignore
 
     async def reorder_playlist_songs(
         self,
@@ -406,6 +408,5 @@ class PlaylistService:
 
         await self.db.flush()
 
-        # Expire cached data to ensure fresh fetch
-        self.db.expire_all()
-        return await self.get_playlist_with_songs(playlist_id, owner_id)  # type: ignore
+        # Fetch fresh data with refresh=True to bypass identity map cache
+        return await self.get_playlist_with_songs(playlist_id, owner_id, refresh=True)  # type: ignore
