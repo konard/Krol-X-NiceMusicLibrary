@@ -4,6 +4,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useUiStore } from '@/stores/ui'
 import { useAuthStore } from '@/stores/auth'
+import { PlaylistsSidebar } from '@/components/playlist'
 
 const router = useRouter()
 const route = useRoute()
@@ -189,6 +190,12 @@ function shouldShowItem(item: NavItem): boolean {
           </button>
         </template>
       </div>
+
+      <!-- Playlists Section -->
+      <PlaylistsSidebar
+        v-if="isAuthenticated"
+        :is-expanded="isSidebarExpanded"
+      />
     </nav>
 
     <!-- Bottom Navigation -->

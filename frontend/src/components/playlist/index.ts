@@ -1,0 +1,6 @@
+export { default as PlaylistCard } from './PlaylistCard.vue'
+export { default as PlaylistHeader } from './PlaylistHeader.vue'
+export { default as CreatePlaylistModal } from './CreatePlaylistModal.vue'
+export { default as EditPlaylistModal } from './EditPlaylistModal.vue'
+export { default as PlaylistsSidebar } from './PlaylistsSidebar.vue'
+export { default as AddToPlaylistMenu } from './AddToPlaylistMenu.vue'

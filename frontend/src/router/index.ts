@@ -13,6 +13,8 @@ const HomeView = () => import('@/pages/HomeView.vue')
 const LoginView = () => import('@/pages/LoginView.vue')
 const RegisterView = () => import('@/pages/RegisterView.vue')
 const LibraryView = () => import('@/pages/LibraryView.vue')
+const PlaylistsView = () => import('@/pages/PlaylistsView.vue')
+const PlaylistView = () => import('@/pages/PlaylistView.vue')
 const StatsView = () => import('@/pages/StatsView.vue')
 const SettingsView = () => import('@/pages/SettingsView.vue')
 const NotFoundView = () => import('@/pages/NotFoundView.vue')
@@ -61,6 +63,24 @@ const routes: RouteRecordRaw[] = [
     component: StatsView,
     meta: {
       title: 'Statistics',
+      requiresAuth: true,
+    },
+  },
+  {
+    path: '/playlists',
+    name: 'playlists',
+    component: PlaylistsView,
+    meta: {
+      title: 'Playlists',
+      requiresAuth: true,
+    },
+  },
+  {
+    path: '/playlists/:id',
+    name: 'playlist',
+    component: PlaylistView,
+    meta: {
+      title: 'Playlist',
       requiresAuth: true,
     },
   },

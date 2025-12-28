@@ -122,17 +122,54 @@ export interface SongFilters {
 // Legacy Track alias for backward compatibility
 export type Track = Song
 
+// Tag types
+export interface Tag {
+  id: string
+  name: string
+  color: string
+  created_at: string
+}
+
+export interface TagCreate {
+  name: string
+  color?: string
+}
+
+export interface TagUpdate {
+  name?: string
+  color?: string
+}
+
 // Playlist types
 export interface Playlist {
-  id: number
+  id: string
   name: string
   description?: string
   cover_url?: string
-  tracks: Track[]
-  track_count: number
+  songs: Song[]
+  song_ids: string[]
+  song_count: number
   total_duration: number
   created_at: string
   updated_at: string
+}
+
+export interface PlaylistCreate {
+  name: string
+  description?: string
+}
+
+export interface PlaylistUpdate {
+  name?: string
+  description?: string
+}
+
+export interface PlaylistListResponse {
+  items: Playlist[]
+  total: number
+  page: number
+  limit: number
+  pages: number
 }
 
 // Mood chain types - matches backend schemas/mood_chain.py
@@ -161,7 +198,6 @@ export interface MoodChainTransition {
   weight: number
   play_count: number
 }
-
 export interface MoodChain {
   id: string
   name: string
