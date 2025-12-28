@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import CurrentUser
 from app.db.session import get_db
+from app.models.song import Song
 from app.schemas.tag import (
     SongTagRequest,
     SongWithTagsResponse,
@@ -28,7 +29,7 @@ from app.services.tag import (
 router = APIRouter()
 
 
-def _convert_song_with_tags(song) -> SongWithTagsResponse:
+def _convert_song_with_tags(song: Song) -> SongWithTagsResponse:
     """Convert song with tags to response format."""
     tags = [
         TagResponse(

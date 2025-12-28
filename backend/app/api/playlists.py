@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import CurrentUser
 from app.db.session import get_db
+from app.models.playlist import Playlist
 from app.schemas.playlist import (
     AddSongToPlaylistRequest,
     PlaylistCreate,
@@ -30,7 +31,7 @@ router = APIRouter()
 
 
 def _convert_playlist_songs_to_response(
-    playlist,
+    playlist: Playlist,
 ) -> list[PlaylistSongWithDetailsResponse]:
     """Convert playlist songs to response format with song details."""
     songs = []
