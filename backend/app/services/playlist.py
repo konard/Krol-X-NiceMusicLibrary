@@ -165,6 +165,8 @@ class PlaylistService:
             setattr(playlist, field, value)
 
         await self.db.flush()
+        # Refresh to get server-side updated_at value
+        await self.db.refresh(playlist)
         return playlist
 
     async def delete_playlist(self, playlist_id: UUID, owner_id: UUID) -> None:
