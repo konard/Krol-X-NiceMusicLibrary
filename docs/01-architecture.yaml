@@ -1,0 +1,355 @@
+# Архитектурный план персональной музыкальной библиотеки
+# NiceMusicLibrary - Technical Specification: Architecture
+
+meta:
+  document: "Архитектурный план"
+  version: "1.0"
+  date: "2025-01"
+  project: "NiceMusicLibrary"
+
+# =============================================================================
+# СРАВНЕНИЕ АРХИТЕКТУР
+# =============================================================================
+
+architecture_comparison:
+  monolith:
+    description: "Единое приложение с объединённым фронтендом и бэкендом"
+
+    advantages:
+      - name: "Простота развёртывания"
+        details: "Одно приложение для деплоя, меньше конфигурации"
+      - name: "Меньше накладных расходов"
+        details: "Нет сетевых задержек между компонентами"
+      - name: "Простота разработки на старте"
+        details: "Быстрый запуск проекта, меньше инфраструктуры"
+      - name: "Единая кодовая база"
+        details: "Легче отслеживать изменения и зависимости"
+
+    disadvantages:
+      - name: "Сложность масштабирования"
+        details: "Масштабируется только целиком, не отдельные части"
+      - name: "Технологическая привязка"
+        details: "Сложно использовать разные технологии для разных частей"
+      - name: "Риск при обновлениях"
+        details: "Изменения в одной части могут сломать другую"
+      - name: "Ограниченная гибкость UI"
+        details: "Сложнее создать современный SPA-интерфейс"
+
+  separated_frontend_backend:
+    description: "Раздельные приложения: REST/GraphQL API + SPA фронтенд"
+
+    advantages:
+      - name: "Независимое масштабирование"
+        details: "Фронтенд и бэкенд масштабируются отдельно"
+      - name: "Гибкость технологий"
+        details: "Разные языки и фреймворки для разных частей"
+      - name: "Параллельная разработка"
+        details: "Команды фронтенда и бэкенда работают независимо"
+      - name: "Лучший UX"
+        details: "Современные SPA-фреймворки для плавного интерфейса"
+      - name: "Переиспользование API"
+        details: "Один API для веб, мобильных и десктоп клиентов"
+      - name: "Кэширование"
+        details: "Статические ресурсы фронтенда легко кэшировать через CDN"
+
+    disadvantages:
+      - name: "Сложность инфраструктуры"
+        details: "Два отдельных деплоя, CORS, прокси"
+      - name: "Начальные накладные расходы"
+        details: "Больше настройки на старте проекта"
+      - name: "Сетевые задержки"
+        details: "API-запросы добавляют латентность"
+
+# =============================================================================
+# ВЫБОР АРХИТЕКТУРЫ
+# =============================================================================
+
+selected_architecture:
+  type: "Раздельный бэкенд и фронтенд"
+
+  justification:
+    primary_reasons:
+      - reason: "Интерактивный плеер"
+        explanation: >
+          Функциональность музыкального плеера требует отзывчивого SPA-интерфейса.
+          Создание "цепочек настроений" с плавными переходами между треками
+          лучше реализуется с помощью React/Vue.
+
+      - reason: "Офлайн-возможности"
+        explanation: >
+          PWA/Service Workers позволят кэшировать треки и работать без интернета.
+          Это критично для музыкального приложения.
+
+      - reason: "Будущее расширение"
+        explanation: >
+          Единый API позволит в будущем создать мобильное приложение
+          или десктоп-клиент без изменения бэкенда.
+
+      - reason: "Оптимизация под музыку"
+        explanation: >
+          Стриминг аудио, предзагрузка следующего трека, визуализации -
+          всё это требует контроля на стороне клиента.
+
+    secondary_reasons:
+      - "Возможность использования CDN для статики и аудиофайлов"
+      - "Независимое обновление UI без перезапуска бэкенда"
+      - "Современные практики веб-разработки"
+
+# =============================================================================
+# КОМПОНЕНТЫ СИСТЕМЫ
+# =============================================================================
+
+system_components:
+
+  backend:
+    name: "API Server"
+    technology:
+      primary: "Python + FastAPI"
+      alternatives:
+        - "Node.js + Express/Fastify"
+        - "Go + Gin"
+
+    responsibilities:
+      - "REST API для всех операций с данными"
+      - "Аутентификация и авторизация (JWT)"
+      - "Управление музыкальными файлами"
+      - "Бизнес-логика цепочек настроений"
+      - "Статистика прослушиваний"
+      - "Алгоритмы рекомендаций"
+
+    sub_components:
+      - name: "Auth Service"
+        description: "Регистрация, логин, сессии, JWT токены"
+
+      - name: "Music Service"
+        description: "CRUD операции с песнями, загрузка файлов"
+
+      - name: "Playlist Service"
+        description: "Управление плейлистами и цепочками настроений"
+
+      - name: "Stats Service"
+        description: "Трекинг прослушиваний, статистика, аналитика"
+
+      - name: "Recommendation Engine"
+        description: "Алгоритмы предложения следующего трека"
+
+  frontend:
+    name: "Web Client (SPA)"
+    technology:
+      primary: "React + TypeScript"
+      alternatives:
+        - "Vue.js 3 + TypeScript"
+        - "Svelte"
+
+    responsibilities:
+      - "Пользовательский интерфейс"
+      - "Аудио-плеер"
+      - "Управление состоянием (Redux/Zustand)"
+      - "Офлайн-кэширование (Service Worker)"
+      - "PWA функциональность"
+
+    sub_components:
+      - name: "Player Component"
+        description: "Воспроизведение, очередь, контролы"
+
+      - name: "Library View"
+        description: "Просмотр и управление музыкальной библиотекой"
+
+      - name: "Mood Chain Builder"
+        description: "Интерфейс создания цепочек настроений"
+
+      - name: "Stats Dashboard"
+        description: "Визуализация статистики прослушиваний"
+
+  database:
+    name: "Data Storage"
+    technology:
+      primary: "PostgreSQL"
+      alternatives:
+        - "SQLite (для простых случаев)"
+        - "MySQL"
+
+    responsibilities:
+      - "Хранение метаданных песен"
+      - "Данные пользователей"
+      - "Плейлисты и цепочки настроений"
+      - "История прослушиваний"
+      - "Статистика и аналитика"
+
+  file_storage:
+    name: "Audio File Storage"
+    technology:
+      primary: "Локальная файловая система"
+      scaling_options:
+        - "MinIO (S3-совместимое хранилище)"
+        - "AWS S3"
+        - "Cloudflare R2"
+
+    responsibilities:
+      - "Хранение аудиофайлов"
+      - "Стриминг контента"
+      - "Кэширование"
+
+  cache:
+    name: "Caching Layer"
+    technology:
+      primary: "Redis"
+      alternative: "In-memory (для начала)"
+
+    responsibilities:
+      - "Кэширование частых запросов"
+      - "Сессии пользователей"
+      - "Очередь воспроизведения"
+      - "Real-time данные плеера"
+
+# =============================================================================
+# ВЗАИМОДЕЙСТВИЕ КОМПОНЕНТОВ
+# =============================================================================
+
+component_interactions:
+
+  flows:
+    - name: "Аутентификация пользователя"
+      steps:
+        - from: "Frontend"
+          to: "API Server"
+          action: "POST /auth/login с credentials"
+        - from: "API Server"
+          to: "Database"
+          action: "Проверка пользователя"
+        - from: "API Server"
+          to: "Cache (Redis)"
+          action: "Сохранение сессии"
+        - from: "API Server"
+          to: "Frontend"
+          action: "JWT токен"
+
+    - name: "Воспроизведение трека"
+      steps:
+        - from: "Frontend"
+          to: "API Server"
+          action: "GET /songs/{id}/stream"
+        - from: "API Server"
+          to: "File Storage"
+          action: "Получение аудиофайла"
+        - from: "API Server"
+          to: "Frontend"
+          action: "Стриминг аудио (byte-range)"
+        - from: "Frontend"
+          to: "API Server"
+          action: "POST /stats/play для трекинга"
+
+    - name: "Получение следующего трека в цепочке настроений"
+      steps:
+        - from: "Frontend"
+          to: "API Server"
+          action: "GET /mood-chains/{id}/next?current={songId}"
+        - from: "API Server"
+          to: "Database"
+          action: "Получение параметров цепочки"
+        - from: "API Server"
+          to: "Recommendation Engine"
+          action: "Расчёт следующего трека"
+        - from: "API Server"
+          to: "Frontend"
+          action: "Предложенные треки с весами"
+
+  communication_protocols:
+    api_format: "REST JSON"
+    authentication: "JWT Bearer Token"
+    audio_streaming: "HTTP Range Requests"
+    real_time: "WebSocket (для синхронизации плеера)"
+
+# =============================================================================
+# ДИАГРАММА АРХИТЕКТУРЫ
+# =============================================================================
+
+architecture_diagram:
+  ascii: |
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                         КЛИЕНТ                                   │
+    │  ┌─────────────────────────────────────────────────────────────┐ │
+    │  │                  React SPA (PWA)                            │ │
+    │  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐       │ │
+    │  │  │  Player  │ │  Library │ │  Mood    │ │  Stats   │       │ │
+    │  │  │Component │ │  View    │ │  Builder │ │Dashboard │       │ │
+    │  │  └──────────┘ └──────────┘ └──────────┘ └──────────┘       │ │
+    │  │                    │                                        │ │
+    │  │              State Management (Zustand/Redux)               │ │
+    │  └─────────────────────────────────────────────────────────────┘ │
+    └───────────────────────────────┬─────────────────────────────────┘
+                                    │ REST API / WebSocket
+                                    ▼
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                       NGINX / API Gateway                        │
+    └───────────────────────────────┬─────────────────────────────────┘
+                                    │
+                                    ▼
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                     API SERVER (FastAPI)                         │
+    │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────────────┐   │
+    │  │   Auth   │ │  Music   │ │ Playlist │ │   Recommendation │   │
+    │  │ Service  │ │ Service  │ │ Service  │ │      Engine      │   │
+    │  └──────────┘ └──────────┘ └──────────┘ └──────────────────┘   │
+    └───────┬───────────────┬─────────────────────────┬───────────────┘
+            │               │                         │
+            ▼               ▼                         ▼
+    ┌──────────────┐ ┌──────────────┐         ┌──────────────┐
+    │  PostgreSQL  │ │ File Storage │         │    Redis     │
+    │  (metadata)  │ │   (audio)    │         │   (cache)    │
+    └──────────────┘ └──────────────┘         └──────────────┘
+
+# =============================================================================
+# БЕЗОПАСНОСТЬ
+# =============================================================================
+
+security:
+  authentication:
+    method: "JWT (JSON Web Tokens)"
+    token_lifetime: "15 минут access, 7 дней refresh"
+    storage: "HttpOnly cookies для refresh, memory для access"
+
+  authorization:
+    model: "RBAC (Role-Based Access Control)"
+    roles:
+      - name: "user"
+        permissions: ["read:own", "write:own"]
+      - name: "admin"
+        permissions: ["read:all", "write:all", "manage:users"]
+
+  data_protection:
+    - "HTTPS для всех соединений"
+    - "Bcrypt для хэширования паролей"
+    - "Rate limiting для API"
+    - "Input validation и sanitization"
+    - "CORS настройка для доверенных доменов"
+
+# =============================================================================
+# МАСШТАБИРОВАНИЕ
+# =============================================================================
+
+scaling_strategy:
+  phase_1_mvp:
+    description: "Один сервер для всего"
+    components:
+      - "Docker Compose с backend, frontend, PostgreSQL, Redis"
+      - "Локальное файловое хранилище"
+    capacity: "До 100 активных пользователей"
+
+  phase_2_growth:
+    description: "Разделение нагрузки"
+    components:
+      - "Отдельные контейнеры за load balancer"
+      - "Managed PostgreSQL (RDS/Cloud SQL)"
+      - "Redis Cluster"
+      - "S3/MinIO для файлов + CDN"
+    capacity: "До 10,000 пользователей"
+
+  phase_3_scale:
+    description: "Микросервисы и горизонтальное масштабирование"
+    components:
+      - "Kubernetes для оркестрации"
+      - "Разбиение на микросервисы"
+      - "Event-driven архитектура (очереди)"
+      - "Географически распределённый CDN"
+    capacity: "100,000+ пользователей"

@@ -1,0 +1,674 @@
+# Поэтапный план реализации персональной музыкальной библиотеки
+# NiceMusicLibrary - Technical Specification: Project Plan
+
+meta:
+  document: "Поэтапный план реализации"
+  version: "1.0"
+  date: "2025-01"
+  project: "NiceMusicLibrary"
+
+# =============================================================================
+# ОБЗОР ПРОЕКТА
+# =============================================================================
+
+project_overview:
+  name: "NiceMusicLibrary"
+  description: "Персональная музыкальная библиотека с расширенными функциями"
+
+  key_features:
+    - "Загрузка и организация личной музыки"
+    - "Современный веб-плеер"
+    - "Плейлисты и цепочки настроений"
+    - "Статистика прослушиваний"
+    - "Интеллектуальные рекомендации"
+
+  technology_stack:
+    backend:
+      language: "Python 3.11+"
+      framework: "FastAPI"
+      database: "PostgreSQL 15+"
+      cache: "Redis"
+      orm: "SQLAlchemy 2.0"
+      migrations: "Alembic"
+
+    frontend:
+      framework: "React 18+ with TypeScript"
+      state: "Zustand"
+      styling: "Tailwind CSS"
+      build: "Vite"
+      testing: "Vitest + React Testing Library"
+
+    infrastructure:
+      containerization: "Docker + Docker Compose"
+      ci_cd: "GitHub Actions"
+      deployment: "Docker Swarm / Kubernetes (Phase 2)"
+
+# =============================================================================
+# ЭТАПЫ РЕАЛИЗАЦИИ
+# =============================================================================
+
+phases:
+
+  # ---------------------------------------------------------------------------
+  # ФАЗА 0: ПОДГОТОВКА
+  # ---------------------------------------------------------------------------
+  - phase: 0
+    name: "Подготовка и настройка инфраструктуры"
+    description: "Создание базовой инфраструктуры проекта"
+
+    duration: "1-2 недели"
+
+    tasks:
+      - id: "P0-1"
+        name: "Инициализация репозитория"
+        description: "Создание структуры проекта, настройка git"
+        deliverables:
+          - "Monorepo структура (backend/, frontend/)"
+          - ".gitignore, .editorconfig"
+          - "README.md с инструкциями"
+
+      - id: "P0-2"
+        name: "Настройка Docker"
+        description: "Контейнеризация сервисов"
+        deliverables:
+          - "Dockerfile для backend"
+          - "Dockerfile для frontend"
+          - "docker-compose.yml для локальной разработки"
+          - "docker-compose.prod.yml для продакшена"
+        dependencies: ["P0-1"]
+
+      - id: "P0-3"
+        name: "Настройка CI/CD"
+        description: "Автоматизация сборки и тестирования"
+        deliverables:
+          - "GitHub Actions workflow для тестов"
+          - "GitHub Actions workflow для сборки образов"
+          - "Линтеры и форматтеры (ruff, eslint, prettier)"
+        dependencies: ["P0-1"]
+
+      - id: "P0-4"
+        name: "Настройка базы данных"
+        description: "PostgreSQL + миграции"
+        deliverables:
+          - "Alembic конфигурация"
+          - "Начальные миграции для всех сущностей"
+          - "Сиды для тестовых данных"
+        dependencies: ["P0-2"]
+
+    milestones:
+      - name: "Инфраструктура готова"
+        criteria:
+          - "Проект запускается одной командой (docker-compose up)"
+          - "CI проходит для пустого проекта"
+          - "База данных мигрирована"
+
+  # ---------------------------------------------------------------------------
+  # ФАЗА 1: MVP - ОСНОВНОЙ ФУНКЦИОНАЛ
+  # ---------------------------------------------------------------------------
+  - phase: 1
+    name: "MVP - Базовый функционал"
+    description: "Минимально жизнеспособный продукт с основными функциями"
+
+    duration: "4-6 недель"
+
+    sub_phases:
+
+      - name: "1.1 Аутентификация"
+        duration: "1 неделя"
+        tasks:
+          - id: "P1.1-1"
+            name: "Backend: Auth endpoints"
+            description: "Регистрация, логин, JWT"
+            deliverables:
+              - "POST /auth/register"
+              - "POST /auth/login"
+              - "POST /auth/refresh"
+              - "GET /auth/me"
+            acceptance:
+              - "Регистрация создаёт пользователя"
+              - "Логин возвращает JWT"
+              - "Защищённые эндпоинты требуют токен"
+
+          - id: "P1.1-2"
+            name: "Frontend: Auth UI"
+            description: "Формы входа и регистрации"
+            deliverables:
+              - "Страница /login"
+              - "Страница /register"
+              - "Хранение токена"
+              - "Protected routes"
+            dependencies: ["P1.1-1"]
+
+      - name: "1.2 Загрузка и библиотека"
+        duration: "2 недели"
+        tasks:
+          - id: "P1.2-1"
+            name: "Backend: Song upload"
+            description: "Загрузка и обработка аудиофайлов"
+            deliverables:
+              - "POST /songs - загрузка файла"
+              - "Извлечение метаданных (mutagen)"
+              - "Сохранение файла в storage"
+              - "POST /songs/batch - массовая загрузка"
+            acceptance:
+              - "MP3, FLAC, OGG загружаются"
+              - "Метаданные извлекаются автоматически"
+              - "Обложка сохраняется"
+
+          - id: "P1.2-2"
+            name: "Backend: Songs CRUD"
+            description: "Операции с песнями"
+            deliverables:
+              - "GET /songs - список с пагинацией"
+              - "GET /songs/{id} - детали"
+              - "PATCH /songs/{id} - обновление"
+              - "DELETE /songs/{id} - удаление"
+            dependencies: ["P1.2-1"]
+
+          - id: "P1.2-3"
+            name: "Frontend: Library UI"
+            description: "Интерфейс библиотеки"
+            deliverables:
+              - "Страница /library"
+              - "Список треков (таблица)"
+              - "Drag-and-drop загрузка"
+              - "Индикатор прогресса загрузки"
+            dependencies: ["P1.2-2"]
+
+      - name: "1.3 Плеер"
+        duration: "2 недели"
+        tasks:
+          - id: "P1.3-1"
+            name: "Backend: Audio streaming"
+            description: "Стриминг аудиофайлов"
+            deliverables:
+              - "GET /songs/{id}/stream"
+              - "Поддержка Range requests"
+              - "Корректные Content-Type"
+            acceptance:
+              - "Аудио воспроизводится в браузере"
+              - "Seek работает"
+
+          - id: "P1.3-2"
+            name: "Frontend: Audio Player"
+            description: "Компонент плеера"
+            deliverables:
+              - "Player component (fixed bottom)"
+              - "Play/Pause, Prev, Next"
+              - "Progress bar с seek"
+              - "Volume control"
+              - "Shuffle, Repeat"
+            dependencies: ["P1.3-1"]
+
+          - id: "P1.3-3"
+            name: "Frontend: Queue management"
+            description: "Очередь воспроизведения"
+            deliverables:
+              - "Queue state (Zustand)"
+              - "Queue panel (slide-out)"
+              - "Add to queue action"
+              - "Drag-and-drop reorder"
+            dependencies: ["P1.3-2"]
+
+    milestones:
+      - name: "MVP Ready"
+        criteria:
+          - "Пользователь может зарегистрироваться"
+          - "Пользователь может загрузить музыку"
+          - "Пользователь может слушать музыку"
+          - "Работает очередь воспроизведения"
+
+  # ---------------------------------------------------------------------------
+  # ФАЗА 2: ПЛЕЙЛИСТЫ И ОРГАНИЗАЦИЯ
+  # ---------------------------------------------------------------------------
+  - phase: 2
+    name: "Плейлисты и организация"
+    description: "Функции организации музыки"
+
+    duration: "2-3 недели"
+
+    tasks:
+      - id: "P2-1"
+        name: "Backend: Playlists CRUD"
+        description: "API для плейлистов"
+        deliverables:
+          - "GET /playlists"
+          - "POST /playlists"
+          - "GET /playlists/{id}"
+          - "PATCH /playlists/{id}"
+          - "DELETE /playlists/{id}"
+          - "POST /playlists/{id}/songs"
+          - "DELETE /playlists/{id}/songs/{song_id}"
+          - "PUT /playlists/{id}/songs/order"
+
+      - id: "P2-2"
+        name: "Frontend: Playlist UI"
+        description: "Интерфейс плейлистов"
+        deliverables:
+          - "Sidebar с плейлистами"
+          - "Страница плейлиста"
+          - "Создание плейлиста (modal)"
+          - "Добавление в плейлист (context menu)"
+          - "Drag-and-drop порядка"
+        dependencies: ["P2-1"]
+
+      - id: "P2-3"
+        name: "Backend: Tags"
+        description: "Система тегов"
+        deliverables:
+          - "CRUD для тегов"
+          - "Привязка тегов к песням"
+          - "Фильтрация по тегам"
+
+      - id: "P2-4"
+        name: "Frontend: Tags UI"
+        description: "Интерфейс тегов"
+        deliverables:
+          - "Отображение тегов на треках"
+          - "Добавление тегов (inline)"
+          - "Фильтр по тегам"
+        dependencies: ["P2-3"]
+
+      - id: "P2-5"
+        name: "Search & Filters"
+        description: "Поиск и фильтрация"
+        deliverables:
+          - "GET /search endpoint"
+          - "Global search (Cmd+K)"
+          - "Фильтры в библиотеке"
+          - "Сортировка"
+
+    milestones:
+      - name: "Организация готова"
+        criteria:
+          - "Плейлисты работают полностью"
+          - "Теги можно добавлять и фильтровать"
+          - "Поиск находит треки"
+
+  # ---------------------------------------------------------------------------
+  # ФАЗА 3: СТАТИСТИКА
+  # ---------------------------------------------------------------------------
+  - phase: 3
+    name: "Статистика и история"
+    description: "Трекинг прослушиваний и аналитика"
+
+    duration: "2 недели"
+
+    tasks:
+      - id: "P3-1"
+        name: "Backend: Play tracking"
+        description: "Запись прослушиваний"
+        deliverables:
+          - "POST /stats/play"
+          - "Обновление play_count и last_played_at"
+          - "Запись в listening_history"
+        acceptance:
+          - "Каждое воспроизведение логируется"
+          - "Записывается контекст (playlist, queue)"
+
+      - id: "P3-2"
+        name: "Frontend: Play events"
+        description: "Отправка событий воспроизведения"
+        deliverables:
+          - "Интеграция с плеером"
+          - "Определение 'completed' (>90%)"
+          - "Определение 'skipped' (<30 sec)"
+        dependencies: ["P3-1"]
+
+      - id: "P3-3"
+        name: "Backend: Statistics API"
+        description: "API статистики"
+        deliverables:
+          - "GET /stats/overview"
+          - "GET /stats/top-songs"
+          - "GET /stats/history"
+          - "Агрегация по периодам"
+        dependencies: ["P3-1"]
+
+      - id: "P3-4"
+        name: "Frontend: Stats Dashboard"
+        description: "Дашборд статистики"
+        deliverables:
+          - "Страница /stats"
+          - "Виджеты метрик"
+          - "Графики (recharts)"
+          - "Переключатель периода"
+        dependencies: ["P3-3"]
+
+    milestones:
+      - name: "Статистика работает"
+        criteria:
+          - "Прослушивания записываются"
+          - "Дашборд показывает данные"
+          - "Работают топ-треки и история"
+
+  # ---------------------------------------------------------------------------
+  # ФАЗА 4: ЦЕПОЧКИ НАСТРОЕНИЙ
+  # ---------------------------------------------------------------------------
+  - phase: 4
+    name: "Цепочки настроений"
+    description: "Ключевой дифференциатор продукта"
+
+    duration: "3-4 недели"
+
+    tasks:
+      - id: "P4-1"
+        name: "Backend: Mood Chains CRUD"
+        description: "Базовые операции с цепочками"
+        deliverables:
+          - "POST /mood-chains"
+          - "GET /mood-chains"
+          - "GET /mood-chains/{id}"
+          - "PATCH /mood-chains/{id}"
+          - "DELETE /mood-chains/{id}"
+
+      - id: "P4-2"
+        name: "Backend: Chain from History"
+        description: "Создание из истории"
+        deliverables:
+          - "POST /mood-chains/from-history"
+          - "Анализ переходов между треками"
+          - "Расчёт весов переходов"
+        dependencies: ["P3-1"]
+
+      - id: "P4-3"
+        name: "Backend: Next track recommendation"
+        description: "Рекомендация следующего трека"
+        deliverables:
+          - "GET /mood-chains/{id}/next"
+          - "Алгоритм на основе весов и истории"
+          - "Учёт transition_style"
+        dependencies: ["P4-1", "P3-1"]
+
+      - id: "P4-4"
+        name: "Frontend: Chain Builder"
+        description: "Визуальный конструктор"
+        deliverables:
+          - "Страница создания цепочки"
+          - "Визуализация связей"
+          - "Добавление треков с поиском"
+          - "Настройка стиля перехода"
+        dependencies: ["P4-1"]
+
+      - id: "P4-5"
+        name: "Frontend: Chain Playback"
+        description: "Воспроизведение с предложениями"
+        deliverables:
+          - "Интеграция с плеером"
+          - "UI предложений следующего трека"
+          - "Авто-выбор по таймауту"
+          - "Crossfade между треками"
+        dependencies: ["P4-3"]
+
+    milestones:
+      - name: "Цепочки работают"
+        criteria:
+          - "Можно создать цепочку вручную"
+          - "Можно создать из истории"
+          - "При воспроизведении предлагает треки"
+          - "Выбор влияет на следующие предложения"
+
+  # ---------------------------------------------------------------------------
+  # ФАЗА 5: РЕКОМЕНДАЦИИ
+  # ---------------------------------------------------------------------------
+  - phase: 5
+    name: "Рекомендации"
+    description: "Интеллектуальные рекомендации"
+
+    duration: "2 недели"
+
+    tasks:
+      - id: "P5-1"
+        name: "Backend: Similar songs"
+        description: "Похожие песни"
+        deliverables:
+          - "GET /recommendations/similar/{song_id}"
+          - "Алгоритм на основе жанра, BPM, energy"
+          - "Использование истории прослушиваний"
+
+      - id: "P5-2"
+        name: "Backend: Discovery"
+        description: "Рекомендации для открытий"
+        deliverables:
+          - "GET /recommendations/discover"
+          - "'Давно не слушали'"
+          - "'На основе любимого'"
+
+      - id: "P5-3"
+        name: "Frontend: Recommendations UI"
+        description: "Интерфейс рекомендаций"
+        deliverables:
+          - "Секция на главной"
+          - "Карточки рекомендаций"
+          - "'Похожие' на странице трека"
+        dependencies: ["P5-1", "P5-2"]
+
+    milestones:
+      - name: "Рекомендации работают"
+        criteria:
+          - "Похожие треки показываются"
+          - "Раздел 'Открытия' на главной"
+
+  # ---------------------------------------------------------------------------
+  # ФАЗА 6: ПОЛИРОВКА
+  # ---------------------------------------------------------------------------
+  - phase: 6
+    name: "Полировка и оптимизация"
+    description: "Улучшение UX и производительности"
+
+    duration: "2-3 недели"
+
+    tasks:
+      - id: "P6-1"
+        name: "PWA & Offline"
+        description: "Офлайн-функциональность"
+        deliverables:
+          - "Service Worker"
+          - "Кэширование статики"
+          - "Офлайн-режим для закэшированных треков"
+          - "Manifest.json"
+
+      - id: "P6-2"
+        name: "Performance optimization"
+        description: "Оптимизация производительности"
+        deliverables:
+          - "Lazy loading компонентов"
+          - "Виртуализация длинных списков"
+          - "Оптимизация запросов (кэширование)"
+          - "Image optimization"
+
+      - id: "P6-3"
+        name: "Mobile responsiveness"
+        description: "Адаптивность под мобильные"
+        deliverables:
+          - "Мобильная навигация"
+          - "Touch-friendly controls"
+          - "Мобильный плеер"
+
+      - id: "P6-4"
+        name: "Keyboard shortcuts"
+        description: "Горячие клавиши"
+        deliverables:
+          - "Глобальные шорткаты"
+          - "Навигация по списку"
+          - "Подсказки шорткатов"
+
+      - id: "P6-5"
+        name: "Dark/Light theme"
+        description: "Темы оформления"
+        deliverables:
+          - "Переключатель темы"
+          - "Системная тема"
+          - "Сохранение предпочтений"
+
+    milestones:
+      - name: "Продакшн готов"
+        criteria:
+          - "PWA устанавливается"
+          - "Работает на мобильных"
+          - "Lighthouse score > 90"
+
+# =============================================================================
+# ЗАВИСИМОСТИ МЕЖДУ ЭТАПАМИ
+# =============================================================================
+
+dependencies:
+  graph: |
+    Phase 0 ─────────────────────────────────────────────────────────────────┐
+        │                                                                     │
+        ▼                                                                     │
+    Phase 1 (MVP)                                                            │
+        │                                                                     │
+        ├──────────────────┬──────────────────┐                              │
+        ▼                  ▼                  ▼                              │
+    Phase 2            Phase 3            Phase 4                            │
+    (Playlists)        (Stats)        (Mood Chains)                          │
+        │                  │                  │                              │
+        │                  │                  │                              │
+        │                  └──────────────────┤                              │
+        │                                     │                              │
+        └──────────────────┬──────────────────┘                              │
+                           ▼                                                  │
+                       Phase 5                                                │
+                   (Recommendations)                                          │
+                           │                                                  │
+                           ▼                                                  │
+                       Phase 6 ◄──────────────────────────────────────────────┘
+                      (Polish)
+
+  notes:
+    - "Фаза 1 (MVP) - обязательный фундамент для всего остального"
+    - "Фазы 2, 3, 4 могут разрабатываться параллельно разными разработчиками"
+    - "Фаза 4 (Цепочки) зависит от Фазы 3 (Статистика) для создания из истории"
+    - "Фаза 5 зависит от статистики и истории прослушиваний"
+    - "Фаза 6 начинается после завершения основного функционала"
+
+# =============================================================================
+# КОНТРОЛЬНЫЕ ТОЧКИ
+# =============================================================================
+
+checkpoints:
+
+  - name: "Alpha Release"
+    after_phase: 1
+    criteria:
+      - "Базовый функционал работает"
+      - "Внутреннее тестирование"
+
+  - name: "Beta Release"
+    after_phase: 4
+    criteria:
+      - "Все основные функции готовы"
+      - "Закрытое бета-тестирование"
+      - "Сбор обратной связи"
+
+  - name: "Release Candidate"
+    after_phase: 5
+    criteria:
+      - "Все функции работают"
+      - "Исправлены критические баги"
+      - "Документация готова"
+
+  - name: "Production Release"
+    after_phase: 6
+    criteria:
+      - "Все тесты проходят"
+      - "Performance оптимизирован"
+      - "Готов к публичному использованию"
+
+# =============================================================================
+# РИСКИ И МИТИГАЦИЯ
+# =============================================================================
+
+risks:
+
+  technical:
+    - risk: "Сложность алгоритма рекомендаций"
+      probability: "Medium"
+      impact: "Medium"
+      mitigation: "Начать с простых эвристик, усложнять итеративно"
+
+    - risk: "Производительность при большой библиотеке"
+      probability: "Medium"
+      impact: "High"
+      mitigation: "Раннее нагрузочное тестирование, индексы в БД"
+
+    - risk: "Проблемы с аудио-стримингом"
+      probability: "Low"
+      impact: "High"
+      mitigation: "Использовать проверенные решения (nginx, CDN)"
+
+  organizational:
+    - risk: "Расширение scope"
+      probability: "High"
+      impact: "Medium"
+      mitigation: "Строгое следование MVP, документирование идей на будущее"
+
+    - risk: "Технический долг"
+      probability: "Medium"
+      impact: "Medium"
+      mitigation: "Code review, рефакторинг в каждом спринте"
+
+# =============================================================================
+# МЕТРИКИ УСПЕХА
+# =============================================================================
+
+success_metrics:
+
+  technical:
+    - metric: "Test coverage"
+      target: "> 80%"
+
+    - metric: "Lighthouse Performance"
+      target: "> 90"
+
+    - metric: "API response time (p95)"
+      target: "< 200ms"
+
+    - metric: "Time to first play"
+      target: "< 3 seconds"
+
+  product:
+    - metric: "Успешная загрузка файлов"
+      target: "> 99%"
+
+    - metric: "Время до первого трека"
+      target: "< 30 секунд после регистрации"
+
+    - metric: "Использование цепочек настроений"
+      target: "> 30% активных пользователей"
+
+# =============================================================================
+# КОМАНДА И РОЛИ
+# =============================================================================
+
+team_structure:
+
+  recommended:
+    - role: "Backend Developer"
+      count: 1
+      responsibilities:
+        - "API development"
+        - "Database design"
+        - "Audio processing"
+
+    - role: "Frontend Developer"
+      count: 1
+      responsibilities:
+        - "React components"
+        - "State management"
+        - "Audio player"
+
+    - role: "Full-stack / DevOps"
+      count: 1
+      responsibilities:
+        - "Infrastructure"
+        - "CI/CD"
+        - "Deployment"
+
+  minimal:
+    description: "Один full-stack разработчик может реализовать MVP"
+    considerations:
+      - "Увеличение сроков"
+      - "Фокус на core features"
+      - "Использование готовых решений"

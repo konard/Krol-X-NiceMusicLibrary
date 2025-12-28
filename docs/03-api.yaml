@@ -1,0 +1,1254 @@
+# API спецификация персональной музыкальной библиотеки
+# NiceMusicLibrary - Technical Specification: API
+
+meta:
+  document: "API спецификация"
+  version: "1.0"
+  date: "2025-01"
+  project: "NiceMusicLibrary"
+
+# =============================================================================
+# ОБЩИЕ НАСТРОЙКИ API
+# =============================================================================
+
+api_info:
+  base_url: "/api/v1"
+  format: "JSON"
+  authentication: "Bearer JWT Token"
+  content_type: "application/json"
+
+  headers:
+    required:
+      - name: "Authorization"
+        format: "Bearer {access_token}"
+        description: "JWT токен (кроме публичных эндпоинтов)"
+    optional:
+      - name: "Accept-Language"
+        format: "ru, en"
+        default: "ru"
+        description: "Язык ответов и сообщений об ошибках"
+
+  pagination:
+    default_limit: 20
+    max_limit: 100
+    parameters:
+      - name: "page"
+        type: "integer"
+        default: 1
+        description: "Номер страницы"
+      - name: "limit"
+        type: "integer"
+        default: 20
+        description: "Количество элементов на странице"
+
+  error_format:
+    schema:
+      error:
+        type: "object"
+        properties:
+          code:
+            type: "string"
+            description: "Код ошибки"
+          message:
+            type: "string"
+            description: "Человекочитаемое описание"
+          details:
+            type: "object"
+            description: "Дополнительные данные об ошибке"
+
+# =============================================================================
+# АУТЕНТИФИКАЦИЯ
+# =============================================================================
+
+endpoints:
+
+  auth:
+    prefix: "/auth"
+    description: "Эндпоинты аутентификации и авторизации"
+
+    register:
+      method: "POST"
+      path: "/register"
+      description: "Регистрация нового пользователя"
+      auth_required: false
+
+      request:
+        body:
+          email:
+            type: "string"
+            format: "email"
+            required: true
+            example: "user@example.com"
+          username:
+            type: "string"
+            min_length: 3
+            max_length: 50
+            required: true
+            example: "musiclover"
+          password:
+            type: "string"
+            min_length: 8
+            required: true
+            example: "SecureP@ss123"
+
+      responses:
+        201:
+          description: "Успешная регистрация"
+          body:
+            user:
+              id: "550e8400-e29b-41d4-a716-446655440000"
+              email: "user@example.com"
+              username: "musiclover"
+              created_at: "2025-01-15T10:30:00Z"
+            tokens:
+              access_token: "eyJhbGciOiJIUzI1NiIs..."
+              refresh_token: "eyJhbGciOiJIUzI1NiIs..."
+              expires_in: 900
+
+        400:
+          description: "Ошибка валидации"
+          body:
+            error:
+              code: "VALIDATION_ERROR"
+              message: "Ошибка валидации данных"
+              details:
+                email: "Пользователь с таким email уже существует"
+
+    login:
+      method: "POST"
+      path: "/login"
+      description: "Вход в систему"
+      auth_required: false
+
+      request:
+        body:
+          email:
+            type: "string"
+            required: true
+            example: "user@example.com"
+          password:
+            type: "string"
+            required: true
+            example: "SecureP@ss123"
+
+      responses:
+        200:
+          description: "Успешный вход"
+          body:
+            user:
+              id: "550e8400-e29b-41d4-a716-446655440000"
+              email: "user@example.com"
+              username: "musiclover"
+              avatar_url: null
+              last_login_at: "2025-01-15T10:30:00Z"
+            tokens:
+              access_token: "eyJhbGciOiJIUzI1NiIs..."
+              refresh_token: "eyJhbGciOiJIUzI1NiIs..."
+              expires_in: 900
+
+        401:
+          description: "Неверные учётные данные"
+          body:
+            error:
+              code: "INVALID_CREDENTIALS"
+              message: "Неверный email или пароль"
+
+    refresh:
+      method: "POST"
+      path: "/refresh"
+      description: "Обновление access токена"
+      auth_required: false
+
+      request:
+        body:
+          refresh_token:
+            type: "string"
+            required: true
+
+      responses:
+        200:
+          description: "Токен обновлён"
+          body:
+            access_token: "eyJhbGciOiJIUzI1NiIs..."
+            expires_in: 900
+
+    logout:
+      method: "POST"
+      path: "/logout"
+      description: "Выход из системы"
+      auth_required: true
+
+      responses:
+        200:
+          description: "Успешный выход"
+          body:
+            message: "Вы успешно вышли из системы"
+
+    me:
+      method: "GET"
+      path: "/me"
+      description: "Получение данных текущего пользователя"
+      auth_required: true
+
+      responses:
+        200:
+          description: "Данные пользователя"
+          body:
+            id: "550e8400-e29b-41d4-a716-446655440000"
+            email: "user@example.com"
+            username: "musiclover"
+            avatar_url: "https://storage.example.com/avatars/user123.jpg"
+            preferences:
+              theme: "dark"
+              language: "ru"
+              default_volume: 0.8
+            stats:
+              total_songs: 1234
+              total_playlists: 15
+              total_listening_hours: 456
+            created_at: "2025-01-01T00:00:00Z"
+
+    update_profile:
+      method: "PATCH"
+      path: "/me"
+      description: "Обновление профиля пользователя"
+      auth_required: true
+
+      request:
+        body:
+          username:
+            type: "string"
+            required: false
+          avatar_url:
+            type: "string"
+            required: false
+          preferences:
+            type: "object"
+            required: false
+
+      responses:
+        200:
+          description: "Профиль обновлён"
+
+# =============================================================================
+# ПЕСНИ (SONGS)
+# =============================================================================
+
+  songs:
+    prefix: "/songs"
+    description: "Операции с музыкальными треками"
+
+    list:
+      method: "GET"
+      path: "/"
+      description: "Получение списка песен пользователя"
+      auth_required: true
+
+      request:
+        query:
+          page:
+            type: "integer"
+            default: 1
+          limit:
+            type: "integer"
+            default: 20
+            max: 100
+          sort:
+            type: "string"
+            enum: ["title", "artist", "album", "added_at", "play_count", "last_played"]
+            default: "added_at"
+          order:
+            type: "string"
+            enum: ["asc", "desc"]
+            default: "desc"
+          search:
+            type: "string"
+            description: "Поиск по названию, исполнителю, альбому"
+          artist:
+            type: "string"
+            description: "Фильтр по исполнителю"
+          album:
+            type: "string"
+            description: "Фильтр по альбому"
+          genre:
+            type: "string"
+            description: "Фильтр по жанру"
+          is_favorite:
+            type: "boolean"
+            description: "Только избранные"
+          year_from:
+            type: "integer"
+            description: "Год выпуска (от)"
+          year_to:
+            type: "integer"
+            description: "Год выпуска (до)"
+
+      responses:
+        200:
+          description: "Список песен"
+          body:
+            items:
+              - id: "song-uuid-1"
+                title: "Bohemian Rhapsody"
+                artist: "Queen"
+                album: "A Night at the Opera"
+                duration_seconds: 354
+                cover_art_url: "https://storage.example.com/covers/song1.jpg"
+                play_count: 42
+                last_played_at: "2025-01-14T20:30:00Z"
+                is_favorite: true
+                rating: 5
+            pagination:
+              page: 1
+              limit: 20
+              total_items: 1234
+              total_pages: 62
+
+    get:
+      method: "GET"
+      path: "/{song_id}"
+      description: "Получение детальной информации о песне"
+      auth_required: true
+
+      request:
+        path_params:
+          song_id:
+            type: "UUID"
+            required: true
+
+      responses:
+        200:
+          description: "Информация о песне"
+          body:
+            id: "song-uuid-1"
+            title: "Bohemian Rhapsody"
+            artist: "Queen"
+            album: "A Night at the Opera"
+            album_artist: "Queen"
+            genre: "Rock"
+            year: 1975
+            track_number: 11
+            disc_number: 1
+            duration_seconds: 354
+            file_format: "flac"
+            bitrate: 1411
+            sample_rate: 44100
+            cover_art_url: "https://storage.example.com/covers/song1.jpg"
+            lyrics: "Is this the real life?..."
+            bpm: 72
+            energy: 0.75
+            valence: 0.45
+            play_count: 42
+            last_played_at: "2025-01-14T20:30:00Z"
+            is_favorite: true
+            rating: 5
+            tags:
+              - id: "tag-1"
+                name: "classics"
+                color: "#FFD700"
+            created_at: "2025-01-01T10:00:00Z"
+
+        404:
+          description: "Песня не найдена"
+          body:
+            error:
+              code: "NOT_FOUND"
+              message: "Песня не найдена"
+
+    upload:
+      method: "POST"
+      path: "/"
+      description: "Загрузка нового трека"
+      auth_required: true
+      content_type: "multipart/form-data"
+
+      request:
+        body:
+          file:
+            type: "file"
+            required: true
+            allowed_types: ["audio/mpeg", "audio/flac", "audio/ogg", "audio/wav", "audio/aac"]
+            max_size_mb: 100
+          title:
+            type: "string"
+            required: false
+            description: "Если не указано, берётся из метаданных файла"
+          artist:
+            type: "string"
+            required: false
+          album:
+            type: "string"
+            required: false
+
+      responses:
+        201:
+          description: "Песня загружена"
+          body:
+            id: "new-song-uuid"
+            title: "Extracted Title"
+            artist: "Extracted Artist"
+            status: "processing"
+            message: "Файл загружен, метаданные обрабатываются"
+
+        400:
+          description: "Ошибка загрузки"
+          body:
+            error:
+              code: "INVALID_FILE"
+              message: "Неподдерживаемый формат файла"
+
+    update:
+      method: "PATCH"
+      path: "/{song_id}"
+      description: "Обновление метаданных песни"
+      auth_required: true
+
+      request:
+        path_params:
+          song_id:
+            type: "UUID"
+        body:
+          title:
+            type: "string"
+          artist:
+            type: "string"
+          album:
+            type: "string"
+          genre:
+            type: "string"
+          year:
+            type: "integer"
+          lyrics:
+            type: "string"
+          is_favorite:
+            type: "boolean"
+          rating:
+            type: "integer"
+            min: 1
+            max: 5
+
+      responses:
+        200:
+          description: "Песня обновлена"
+
+    delete:
+      method: "DELETE"
+      path: "/{song_id}"
+      description: "Удаление песни"
+      auth_required: true
+
+      responses:
+        204:
+          description: "Песня удалена"
+
+    stream:
+      method: "GET"
+      path: "/{song_id}/stream"
+      description: "Стриминг аудиофайла"
+      auth_required: true
+      content_type: "audio/*"
+
+      request:
+        headers:
+          Range:
+            type: "string"
+            description: "Диапазон байтов (для seek)"
+            example: "bytes=0-1048575"
+
+      responses:
+        200:
+          description: "Полный файл"
+          headers:
+            Content-Type: "audio/mpeg"
+            Content-Length: "5242880"
+            Accept-Ranges: "bytes"
+
+        206:
+          description: "Частичный контент (byte-range)"
+          headers:
+            Content-Type: "audio/mpeg"
+            Content-Range: "bytes 0-1048575/5242880"
+            Content-Length: "1048576"
+
+    batch_upload:
+      method: "POST"
+      path: "/batch"
+      description: "Массовая загрузка треков"
+      auth_required: true
+      content_type: "multipart/form-data"
+
+      request:
+        body:
+          files:
+            type: "array"
+            items:
+              type: "file"
+            max_count: 50
+
+      responses:
+        202:
+          description: "Загрузка принята"
+          body:
+            batch_id: "batch-uuid"
+            total_files: 25
+            status: "processing"
+            status_url: "/songs/batch/batch-uuid/status"
+
+# =============================================================================
+# ПЛЕЙЛИСТЫ
+# =============================================================================
+
+  playlists:
+    prefix: "/playlists"
+    description: "Управление плейлистами"
+
+    list:
+      method: "GET"
+      path: "/"
+      description: "Список плейлистов пользователя"
+      auth_required: true
+
+      request:
+        query:
+          page:
+            type: "integer"
+          limit:
+            type: "integer"
+          sort:
+            type: "string"
+            enum: ["name", "created_at", "updated_at", "song_count"]
+
+      responses:
+        200:
+          description: "Список плейлистов"
+          body:
+            items:
+              - id: "playlist-uuid-1"
+                name: "Для тренировки"
+                description: "Энергичные треки"
+                cover_image_url: "https://storage.example.com/playlists/1.jpg"
+                song_count: 45
+                total_duration_seconds: 9720
+                is_public: false
+                created_at: "2025-01-10T12:00:00Z"
+            pagination:
+              page: 1
+              limit: 20
+              total_items: 15
+
+    create:
+      method: "POST"
+      path: "/"
+      description: "Создание нового плейлиста"
+      auth_required: true
+
+      request:
+        body:
+          name:
+            type: "string"
+            required: true
+            max_length: 255
+          description:
+            type: "string"
+          is_public:
+            type: "boolean"
+            default: false
+          song_ids:
+            type: "array"
+            items:
+              type: "UUID"
+            description: "Начальный набор песен"
+
+      responses:
+        201:
+          description: "Плейлист создан"
+          body:
+            id: "new-playlist-uuid"
+            name: "Новый плейлист"
+            song_count: 0
+
+    get:
+      method: "GET"
+      path: "/{playlist_id}"
+      description: "Получение плейлиста с треками"
+      auth_required: true
+
+      responses:
+        200:
+          description: "Плейлист"
+          body:
+            id: "playlist-uuid"
+            name: "Для тренировки"
+            description: "Энергичные треки"
+            cover_image_url: "..."
+            song_count: 45
+            total_duration_seconds: 9720
+            songs:
+              - position: 1
+                song:
+                  id: "song-uuid-1"
+                  title: "Eye of the Tiger"
+                  artist: "Survivor"
+                  duration_seconds: 245
+              - position: 2
+                song:
+                  id: "song-uuid-2"
+                  title: "..."
+
+    update:
+      method: "PATCH"
+      path: "/{playlist_id}"
+      description: "Обновление плейлиста"
+      auth_required: true
+
+      request:
+        body:
+          name:
+            type: "string"
+          description:
+            type: "string"
+          is_public:
+            type: "boolean"
+
+      responses:
+        200:
+          description: "Плейлист обновлён"
+
+    delete:
+      method: "DELETE"
+      path: "/{playlist_id}"
+      description: "Удаление плейлиста"
+      auth_required: true
+
+      responses:
+        204:
+          description: "Плейлист удалён"
+
+    add_songs:
+      method: "POST"
+      path: "/{playlist_id}/songs"
+      description: "Добавление песен в плейлист"
+      auth_required: true
+
+      request:
+        body:
+          song_ids:
+            type: "array"
+            items:
+              type: "UUID"
+            required: true
+          position:
+            type: "integer"
+            description: "Позиция вставки (в конец, если не указано)"
+
+      responses:
+        200:
+          description: "Песни добавлены"
+          body:
+            added_count: 5
+            song_count: 50
+
+    remove_song:
+      method: "DELETE"
+      path: "/{playlist_id}/songs/{song_id}"
+      description: "Удаление песни из плейлиста"
+      auth_required: true
+
+      responses:
+        204:
+          description: "Песня удалена из плейлиста"
+
+    reorder:
+      method: "PUT"
+      path: "/{playlist_id}/songs/order"
+      description: "Изменение порядка песен в плейлисте"
+      auth_required: true
+
+      request:
+        body:
+          song_ids:
+            type: "array"
+            items:
+              type: "UUID"
+            description: "Новый порядок всех песен"
+
+      responses:
+        200:
+          description: "Порядок обновлён"
+
+# =============================================================================
+# ЦЕПОЧКИ НАСТРОЕНИЙ
+# =============================================================================
+
+  mood_chains:
+    prefix: "/mood-chains"
+    description: "Управление цепочками настроений"
+
+    list:
+      method: "GET"
+      path: "/"
+      description: "Список цепочек настроений"
+      auth_required: true
+
+      request:
+        query:
+          mood_tag:
+            type: "string"
+            description: "Фильтр по тегу настроения"
+          is_auto_generated:
+            type: "boolean"
+            description: "Только автоматически созданные"
+
+      responses:
+        200:
+          description: "Список цепочек"
+          body:
+            items:
+              - id: "chain-uuid-1"
+                name: "Вечерний чилл"
+                description: "Расслабляющая музыка для вечера"
+                mood_tags: ["chill", "relaxing", "evening"]
+                cover_image_url: "..."
+                song_count: 20
+                play_count: 15
+                transition_style: "smooth"
+                is_auto_generated: false
+
+    create:
+      method: "POST"
+      path: "/"
+      description: "Создание цепочки настроений"
+      auth_required: true
+
+      request:
+        body:
+          name:
+            type: "string"
+            required: true
+          description:
+            type: "string"
+          mood_tags:
+            type: "array"
+            items:
+              type: "string"
+          transition_style:
+            type: "string"
+            enum: ["smooth", "random", "energy_flow", "genre_match"]
+            default: "smooth"
+          song_ids:
+            type: "array"
+            items:
+              type: "UUID"
+
+      responses:
+        201:
+          description: "Цепочка создана"
+
+    create_from_history:
+      method: "POST"
+      path: "/from-history"
+      description: "Создание цепочки из истории прослушиваний"
+      auth_required: true
+
+      request:
+        body:
+          name:
+            type: "string"
+            required: true
+          start_date:
+            type: "datetime"
+            required: true
+            description: "Начало периода истории"
+          end_date:
+            type: "datetime"
+            required: true
+            description: "Конец периода истории"
+          min_play_count:
+            type: "integer"
+            default: 1
+            description: "Минимальное количество прослушиваний для включения"
+          mood_tags:
+            type: "array"
+            items:
+              type: "string"
+
+      responses:
+        201:
+          description: "Цепочка создана из истории"
+          body:
+            id: "chain-uuid"
+            name: "Январь 2025"
+            song_count: 35
+            source_history_start: "2025-01-01T00:00:00Z"
+            source_history_end: "2025-01-31T23:59:59Z"
+            is_auto_generated: true
+
+    get:
+      method: "GET"
+      path: "/{chain_id}"
+      description: "Получение цепочки с треками"
+      auth_required: true
+
+      responses:
+        200:
+          description: "Цепочка настроений"
+          body:
+            id: "chain-uuid"
+            name: "Вечерний чилл"
+            songs:
+              - position: 1
+                song:
+                  id: "song-uuid"
+                  title: "..."
+                transition_weight: 0.85
+              - position: 2
+                song:
+                  id: "..."
+                transition_weight: 0.92
+
+    get_next:
+      method: "GET"
+      path: "/{chain_id}/next"
+      description: "Получение следующего рекомендуемого трека"
+      auth_required: true
+
+      request:
+        query:
+          current_song_id:
+            type: "UUID"
+            required: true
+            description: "Текущий трек"
+          count:
+            type: "integer"
+            default: 3
+            description: "Количество рекомендаций"
+
+      responses:
+        200:
+          description: "Рекомендуемые следующие треки"
+          body:
+            recommendations:
+              - song:
+                  id: "song-uuid-1"
+                  title: "Recommended Song 1"
+                  artist: "Artist"
+                score: 0.95
+                reason: "Похожий темп и настроение"
+              - song:
+                  id: "song-uuid-2"
+                  title: "Recommended Song 2"
+                score: 0.87
+                reason: "Часто слушается после текущего трека"
+
+    update:
+      method: "PATCH"
+      path: "/{chain_id}"
+      description: "Обновление цепочки"
+      auth_required: true
+
+      responses:
+        200:
+          description: "Цепочка обновлена"
+
+    delete:
+      method: "DELETE"
+      path: "/{chain_id}"
+      description: "Удаление цепочки"
+      auth_required: true
+
+      responses:
+        204:
+          description: "Цепочка удалена"
+
+# =============================================================================
+# СТАТИСТИКА И ИСТОРИЯ
+# =============================================================================
+
+  stats:
+    prefix: "/stats"
+    description: "Статистика прослушиваний и аналитика"
+
+    record_play:
+      method: "POST"
+      path: "/play"
+      description: "Запись прослушивания трека"
+      auth_required: true
+
+      request:
+        body:
+          song_id:
+            type: "UUID"
+            required: true
+          duration_seconds:
+            type: "integer"
+            description: "Сколько секунд прослушано"
+          completed:
+            type: "boolean"
+            description: "Дослушано ли до конца"
+          context_type:
+            type: "string"
+            enum: ["library", "playlist", "mood_chain", "search", "recommendation"]
+          context_id:
+            type: "UUID"
+            description: "ID плейлиста/цепочки"
+          previous_song_id:
+            type: "UUID"
+            description: "Предыдущий трек"
+
+      responses:
+        201:
+          description: "Прослушивание записано"
+          body:
+            id: "history-uuid"
+            song:
+              play_count: 43
+              last_played_at: "2025-01-15T12:30:00Z"
+
+    listening_history:
+      method: "GET"
+      path: "/history"
+      description: "История прослушиваний"
+      auth_required: true
+
+      request:
+        query:
+          page:
+            type: "integer"
+          limit:
+            type: "integer"
+          start_date:
+            type: "datetime"
+          end_date:
+            type: "datetime"
+          song_id:
+            type: "UUID"
+            description: "Фильтр по конкретной песне"
+
+      responses:
+        200:
+          description: "История прослушиваний"
+          body:
+            items:
+              - id: "history-uuid"
+                song:
+                  id: "song-uuid"
+                  title: "Song Title"
+                  artist: "Artist"
+                played_at: "2025-01-15T12:30:00Z"
+                played_duration_seconds: 234
+                completed: true
+                context_type: "playlist"
+            pagination:
+              total_items: 5000
+
+    overview:
+      method: "GET"
+      path: "/overview"
+      description: "Общая статистика пользователя"
+      auth_required: true
+
+      request:
+        query:
+          period:
+            type: "string"
+            enum: ["week", "month", "year", "all_time"]
+            default: "month"
+
+      responses:
+        200:
+          description: "Обзор статистики"
+          body:
+            period: "month"
+            total_listening_time_seconds: 86400
+            total_songs_played: 450
+            unique_songs: 120
+            unique_artists: 45
+            top_songs:
+              - song:
+                  id: "..."
+                  title: "..."
+                play_count: 25
+            top_artists:
+              - artist: "Queen"
+                play_count: 85
+            top_genres:
+              - genre: "Rock"
+                play_count: 200
+            listening_by_hour:
+              - hour: 0
+                count: 5
+              - hour: 1
+                count: 2
+              # ... 24 часа
+            listening_by_day:
+              - date: "2025-01-01"
+                minutes: 120
+              # ... дни периода
+
+    top_songs:
+      method: "GET"
+      path: "/top-songs"
+      description: "Топ песен по прослушиваниям"
+      auth_required: true
+
+      request:
+        query:
+          period:
+            type: "string"
+            enum: ["week", "month", "year", "all_time"]
+          limit:
+            type: "integer"
+            default: 20
+
+      responses:
+        200:
+          description: "Топ песен"
+          body:
+            period: "month"
+            items:
+              - rank: 1
+                song:
+                  id: "..."
+                  title: "Bohemian Rhapsody"
+                  artist: "Queen"
+                play_count: 42
+                total_listen_time_seconds: 14868
+
+# =============================================================================
+# ПОИСК И РЕКОМЕНДАЦИИ
+# =============================================================================
+
+  search:
+    prefix: "/search"
+    description: "Поиск по библиотеке"
+
+    global:
+      method: "GET"
+      path: "/"
+      description: "Глобальный поиск"
+      auth_required: true
+
+      request:
+        query:
+          q:
+            type: "string"
+            required: true
+            description: "Поисковый запрос"
+          type:
+            type: "string"
+            enum: ["all", "songs", "artists", "albums", "playlists"]
+            default: "all"
+          limit:
+            type: "integer"
+            default: 10
+
+      responses:
+        200:
+          description: "Результаты поиска"
+          body:
+            query: "queen"
+            songs:
+              - id: "..."
+                title: "Bohemian Rhapsody"
+                artist: "Queen"
+            artists:
+              - name: "Queen"
+                song_count: 45
+            albums:
+              - name: "A Night at the Opera"
+                artist: "Queen"
+                song_count: 12
+            playlists:
+              - id: "..."
+                name: "Queen Best"
+
+  recommendations:
+    prefix: "/recommendations"
+    description: "Рекомендации"
+
+    similar_songs:
+      method: "GET"
+      path: "/similar/{song_id}"
+      description: "Похожие песни"
+      auth_required: true
+
+      request:
+        query:
+          limit:
+            type: "integer"
+            default: 10
+
+      responses:
+        200:
+          description: "Похожие песни"
+          body:
+            source_song:
+              id: "..."
+              title: "..."
+            similar:
+              - song:
+                  id: "..."
+                  title: "..."
+                similarity_score: 0.92
+                reasons:
+                  - "Похожий жанр"
+                  - "Близкий темп"
+
+    discovery:
+      method: "GET"
+      path: "/discover"
+      description: "Рекомендации для открытия новой музыки"
+      auth_required: true
+
+      request:
+        query:
+          based_on:
+            type: "string"
+            enum: ["listening_history", "favorites", "mood"]
+            default: "listening_history"
+          mood:
+            type: "string"
+            description: "Тег настроения (если based_on=mood)"
+
+      responses:
+        200:
+          description: "Рекомендации"
+          body:
+            recommendations:
+              - song:
+                  id: "..."
+                  title: "..."
+                reason: "Основано на ваших любимых треках"
+                confidence: 0.85
+
+# =============================================================================
+# ТЕГИ
+# =============================================================================
+
+  tags:
+    prefix: "/tags"
+    description: "Управление тегами"
+
+    list:
+      method: "GET"
+      path: "/"
+      description: "Список тегов пользователя"
+      auth_required: true
+
+      responses:
+        200:
+          description: "Список тегов"
+          body:
+            items:
+              - id: "tag-uuid"
+                name: "classics"
+                color: "#FFD700"
+                song_count: 45
+
+    create:
+      method: "POST"
+      path: "/"
+      description: "Создание тега"
+      auth_required: true
+
+      request:
+        body:
+          name:
+            type: "string"
+            required: true
+          color:
+            type: "string"
+            format: "hex_color"
+
+      responses:
+        201:
+          description: "Тег создан"
+
+    add_to_song:
+      method: "POST"
+      path: "/{tag_id}/songs/{song_id}"
+      description: "Добавление тега к песне"
+      auth_required: true
+
+      responses:
+        200:
+          description: "Тег добавлен"
+
+    remove_from_song:
+      method: "DELETE"
+      path: "/{tag_id}/songs/{song_id}"
+      description: "Удаление тега с песни"
+      auth_required: true
+
+      responses:
+        204:
+          description: "Тег удалён"
+
+# =============================================================================
+# КОДЫ ОТВЕТОВ
+# =============================================================================
+
+response_codes:
+  success:
+    200:
+      description: "OK - Успешный запрос"
+    201:
+      description: "Created - Ресурс создан"
+    202:
+      description: "Accepted - Запрос принят в обработку"
+    204:
+      description: "No Content - Успешно, без тела ответа"
+    206:
+      description: "Partial Content - Частичный контент (для стриминга)"
+
+  client_errors:
+    400:
+      description: "Bad Request - Ошибка в запросе"
+      codes:
+        - "VALIDATION_ERROR"
+        - "INVALID_FILE"
+        - "INVALID_FORMAT"
+    401:
+      description: "Unauthorized - Требуется аутентификация"
+      codes:
+        - "INVALID_TOKEN"
+        - "TOKEN_EXPIRED"
+        - "INVALID_CREDENTIALS"
+    403:
+      description: "Forbidden - Доступ запрещён"
+      codes:
+        - "ACCESS_DENIED"
+        - "INSUFFICIENT_PERMISSIONS"
+    404:
+      description: "Not Found - Ресурс не найден"
+      codes:
+        - "NOT_FOUND"
+        - "SONG_NOT_FOUND"
+        - "PLAYLIST_NOT_FOUND"
+    409:
+      description: "Conflict - Конфликт"
+      codes:
+        - "ALREADY_EXISTS"
+        - "DUPLICATE_ENTRY"
+    413:
+      description: "Payload Too Large - Файл слишком большой"
+      codes:
+        - "FILE_TOO_LARGE"
+    422:
+      description: "Unprocessable Entity - Невалидные данные"
+      codes:
+        - "INVALID_DATA"
+    429:
+      description: "Too Many Requests - Превышен лимит запросов"
+      codes:
+        - "RATE_LIMIT_EXCEEDED"
+
+  server_errors:
+    500:
+      description: "Internal Server Error - Внутренняя ошибка"
+      codes:
+        - "INTERNAL_ERROR"
+    503:
+      description: "Service Unavailable - Сервис недоступен"
+      codes:
+        - "SERVICE_UNAVAILABLE"
