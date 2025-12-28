@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
+import { AppLayout } from '@/components/layout'
+import { useKeyboard } from '@/composables'
+
+// Initialize global keyboard shortcuts
+useKeyboard()
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
+  <AppLayout>
     <RouterView />
-  </div>
+  </AppLayout>
 </template>
