@@ -1,5 +1,7 @@
 """Tests for authentication service and endpoints."""
 
+import os
+
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -23,8 +25,22 @@ from app.services.auth import (
     UserAlreadyExistsError,
 )
 
-# Test database URL (in-memory SQLite for simplicity)
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+
+def get_test_database_url() -> str:
+    """Get database URL for testing.
+
+    Uses PostgreSQL if environment variables are set (CI), otherwise raises error.
+    """
+    pg_host = os.getenv("POSTGRES_HOST", "localhost")
+    pg_port = os.getenv("POSTGRES_PORT", "5432")
+    pg_user = os.getenv("POSTGRES_USER", "test")
+    pg_password = os.getenv("POSTGRES_PASSWORD", "test")
+    pg_db = os.getenv("POSTGRES_DB", "test")
+    return f"postgresql+asyncpg://{pg_user}:{pg_password}@{pg_host}:{pg_port}/{pg_db}"
+
+
+# Create test database URL
+TEST_DATABASE_URL = get_test_database_url()
 
 # Create test engine
 test_engine = create_async_engine(
