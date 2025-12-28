@@ -10,6 +10,8 @@ from app.api.auth import router as auth_router
 from app.api.health import router as health_router
 from app.api.mood_chains import router as mood_chains_router
 from app.api.playlists import router as playlists_router
+from app.api.recommendations import router as recommendations_router
+from app.api.search import router as search_router
 from app.api.songs import router as songs_router
 from app.api.stats import router as stats_router
 from app.api.tags import router as tags_router
@@ -73,6 +75,16 @@ def create_app() -> FastAPI:
         mood_chains_router,
         prefix=f"{settings.API_V1_PREFIX}/mood-chains",
         tags=["mood-chains"],
+    )
+    app.include_router(
+        recommendations_router,
+        prefix=f"{settings.API_V1_PREFIX}/recommendations",
+        tags=["recommendations"],
+    )
+    app.include_router(
+        search_router,
+        prefix=f"{settings.API_V1_PREFIX}/search",
+        tags=["search"],
     )
 
     return app
