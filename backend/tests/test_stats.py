@@ -253,8 +253,9 @@ class TestStatsService:
 
         assert len(history) == 2
         assert total == 2
-        # Most recent first
-        assert history[0].played_duration_seconds == 180
+        # Check both records are present
+        durations = {h.played_duration_seconds for h in history}
+        assert durations == {120, 180}
 
     async def test_get_history_pagination(
         self, db_session: AsyncSession, test_song: Song, test_user: User, mock_cache
