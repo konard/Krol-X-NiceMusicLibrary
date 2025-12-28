@@ -1,0 +1,110 @@
+# ====================
+# General
+# ====================
+.DS_Store
+*.log
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.sublime-*
+
+# ====================
+# Environment
+# ====================
+.env
+.env.local
+.env.*.local
+*.env
+
+# ====================
+# Python / Backend
+# ====================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+venv/
+.venv/
+ENV/
+
+# ====================
+# Node.js / Frontend
+# ====================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+
+# Build output
+frontend/dist/
+frontend/dist-ssr/
+*.local
+
+# TypeScript
+*.tsbuildinfo
+
+# ====================
+# Docker
+# ====================
+.docker/
+
+# ====================
+# Uploads and Storage
+# ====================
+uploads/
+storage/
+*.mp3
+*.flac
+*.ogg
+*.wav
+*.m4a
+
+# ====================
+# Database
+# ====================
+*.sqlite
+*.db
+pgdata/
+
+# ====================
+# Coverage Reports
+# ====================
+coverage/
+.nyc_output/
+
+# ====================
+# IDE specific
+# ====================
+.project
+.classpath
+.settings/
