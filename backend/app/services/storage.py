@@ -5,8 +5,8 @@ import uuid
 from pathlib import Path
 from typing import IO
 
-import aiofiles
-import aiofiles.os
+import aiofiles  # type: ignore[import-untyped]
+import aiofiles.os  # type: ignore[import-untyped]
 
 from app.core.config import settings
 

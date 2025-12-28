@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from mutagen import File as MutagenFile
+from mutagen import File as MutagenFile  # type: ignore[attr-defined]
 from mutagen.flac import FLAC
 from mutagen.mp3 import MP3
 from mutagen.mp4 import MP4
@@ -234,7 +234,7 @@ class MetadataExtractor:
 
     def _extract_ogg(self, file_path: str) -> AudioMetadata:
         """Extract metadata from OGG Vorbis file."""
-        audio = OggVorbis(file_path)
+        audio = OggVorbis(file_path)  # type: ignore[no-untyped-call]
         metadata = AudioMetadata()
 
         # Get audio properties
@@ -290,7 +290,7 @@ class MetadataExtractor:
 
     def _extract_m4a(self, file_path: str) -> AudioMetadata:
         """Extract metadata from M4A/AAC file."""
-        audio = MP4(file_path)
+        audio = MP4(file_path)  # type: ignore[no-untyped-call]
         metadata = AudioMetadata()
 
         # Get audio properties
