@@ -256,6 +256,8 @@ class TagService:
         self.db.add(song_tag)
         await self.db.flush()
 
+        # Expire cached data to ensure fresh fetch
+        self.db.expire_all()
         return await self._get_song_with_tags(song_id, owner_id)  # type: ignore
 
     async def remove_tag_from_song(
@@ -289,6 +291,8 @@ class TagService:
         await self.db.delete(song_tag)
         await self.db.flush()
 
+        # Expire cached data to ensure fresh fetch
+        self.db.expire_all()
         return await self._get_song_with_tags(song_id, owner_id)  # type: ignore
 
     async def get_song_with_tags(self, song_id: UUID, owner_id: UUID) -> Song | None:

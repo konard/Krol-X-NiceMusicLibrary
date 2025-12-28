@@ -302,10 +302,14 @@ class PlaylistService:
         )
         self.db.add(playlist_song)
 
-        # Recalculate stats
-        await self._recalculate_playlist_stats(playlist)
-
         await self.db.flush()
+
+        # Recalculate stats (after flush to get correct data)
+        await self._recalculate_playlist_stats(playlist)
+        await self.db.flush()
+
+        # Expire cached data to ensure fresh fetch
+        self.db.expire_all()
         return await self.get_playlist_with_songs(playlist_id, owner_id)  # type: ignore
 
     async def remove_song_from_playlist(
@@ -354,10 +358,14 @@ class PlaylistService:
         for ps in songs_to_shift:
             ps.position -= 1
 
-        # Recalculate stats
-        await self._recalculate_playlist_stats(playlist)
-
         await self.db.flush()
+
+        # Recalculate stats (after flush to get correct data)
+        await self._recalculate_playlist_stats(playlist)
+        await self.db.flush()
+
+        # Expire cached data to ensure fresh fetch
+        self.db.expire_all()
         return await self.get_playlist_with_songs(playlist_id, owner_id)  # type: ignore
 
     async def reorder_playlist_songs(
@@ -397,4 +405,7 @@ class PlaylistService:
                     break
 
         await self.db.flush()
+
+        # Expire cached data to ensure fresh fetch
+        self.db.expire_all()
         return await self.get_playlist_with_songs(playlist_id, owner_id)  # type: ignore
