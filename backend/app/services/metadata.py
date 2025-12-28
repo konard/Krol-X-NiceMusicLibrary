@@ -86,7 +86,9 @@ class MetadataExtractor:
         # Get audio properties
         if audio.info:
             metadata.duration_seconds = int(audio.info.length)
-            metadata.bitrate = audio.info.bitrate // 1000 if audio.info.bitrate else None
+            metadata.bitrate = (
+                audio.info.bitrate // 1000 if audio.info.bitrate else None
+            )
             metadata.sample_rate = audio.info.sample_rate
 
         # Get ID3 tags
@@ -172,7 +174,11 @@ class MetadataExtractor:
         # Get audio properties
         if audio.info:
             metadata.duration_seconds = int(audio.info.length)
-            metadata.bitrate = audio.info.bitrate // 1000 if hasattr(audio.info, 'bitrate') and audio.info.bitrate else None
+            metadata.bitrate = (
+                audio.info.bitrate // 1000
+                if hasattr(audio.info, "bitrate") and audio.info.bitrate
+                else None
+            )
             metadata.sample_rate = audio.info.sample_rate
 
         # Get Vorbis comments
@@ -233,7 +239,9 @@ class MetadataExtractor:
         # Get audio properties
         if audio.info:
             metadata.duration_seconds = int(audio.info.length)
-            metadata.bitrate = audio.info.bitrate // 1000 if audio.info.bitrate else None
+            metadata.bitrate = (
+                audio.info.bitrate // 1000 if audio.info.bitrate else None
+            )
             metadata.sample_rate = audio.info.sample_rate
 
         # Get Vorbis comments (same as FLAC)
@@ -287,7 +295,9 @@ class MetadataExtractor:
         # Get audio properties
         if audio.info:
             metadata.duration_seconds = int(audio.info.length)
-            metadata.bitrate = audio.info.bitrate // 1000 if audio.info.bitrate else None
+            metadata.bitrate = (
+                audio.info.bitrate // 1000 if audio.info.bitrate else None
+            )
             metadata.sample_rate = audio.info.sample_rate
 
         # Get MP4 tags
@@ -351,7 +361,7 @@ class MetadataExtractor:
                 cover = tags["covr"][0]
                 metadata.cover_art = bytes(cover)
                 # MP4 cover format
-                if hasattr(cover, 'imageformat'):
+                if hasattr(cover, "imageformat"):
                     if cover.imageformat == 13:  # JPEG
                         metadata.cover_art_mime = "image/jpeg"
                     elif cover.imageformat == 14:  # PNG
@@ -369,10 +379,18 @@ class MetadataExtractor:
         # WAV files usually don't have tags, but we can get audio info
         if audio and audio.info:
             metadata.duration_seconds = int(audio.info.length)
-            metadata.sample_rate = audio.info.sample_rate if hasattr(audio.info, 'sample_rate') else None
+            metadata.sample_rate = (
+                audio.info.sample_rate if hasattr(audio.info, "sample_rate") else None
+            )
             # Calculate bitrate for WAV (typically uncompressed)
-            if hasattr(audio.info, 'bits_per_sample') and hasattr(audio.info, 'channels'):
-                bps = audio.info.bits_per_sample * audio.info.sample_rate * audio.info.channels
+            if hasattr(audio.info, "bits_per_sample") and hasattr(
+                audio.info, "channels"
+            ):
+                bps = (
+                    audio.info.bits_per_sample
+                    * audio.info.sample_rate
+                    * audio.info.channels
+                )
                 metadata.bitrate = bps // 1000
 
         # Try to get any available tags
@@ -394,9 +412,9 @@ class MetadataExtractor:
 
         if audio.info:
             metadata.duration_seconds = int(audio.info.length)
-            if hasattr(audio.info, 'bitrate') and audio.info.bitrate:
+            if hasattr(audio.info, "bitrate") and audio.info.bitrate:
                 metadata.bitrate = audio.info.bitrate // 1000
-            if hasattr(audio.info, 'sample_rate'):
+            if hasattr(audio.info, "sample_rate"):
                 metadata.sample_rate = audio.info.sample_rate
 
         return metadata

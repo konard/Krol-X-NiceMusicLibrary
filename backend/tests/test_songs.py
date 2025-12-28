@@ -237,7 +237,7 @@ class TestMetadataExtractor:
         extractor = MetadataExtractor()
 
         # Create a mock for mutagen.File
-        with patch('app.services.metadata.MutagenFile') as mock_file:
+        with patch("app.services.metadata.MutagenFile") as mock_file:
             mock_audio = MagicMock()
             mock_audio.info.length = 180
             mock_audio.info.bitrate = 320000
@@ -246,7 +246,7 @@ class TestMetadataExtractor:
             mock_file.return_value = mock_audio
 
             # We need to test with a supported format
-            with patch('app.services.metadata.MP3') as mock_mp3:
+            with patch("app.services.metadata.MP3") as mock_mp3:
                 mock_mp3_instance = MagicMock()
                 mock_mp3_instance.info.length = 180
                 mock_mp3_instance.info.bitrate = 320000
@@ -264,7 +264,9 @@ class TestMetadataExtractor:
 class TestMusicService:
     """Tests for MusicService."""
 
-    async def test_get_song_by_id(self, db_session: AsyncSession, test_song: Song, test_user: User):
+    async def test_get_song_by_id(
+        self, db_session: AsyncSession, test_song: Song, test_user: User
+    ):
         """Test getting song by ID."""
         music_service = MusicService(db_session)
         song = await music_service.get_song_by_id(test_song.id, test_user.id)
@@ -273,7 +275,9 @@ class TestMusicService:
         assert song.id == test_song.id
         assert song.title == "Test Song"
 
-    async def test_get_song_by_id_wrong_owner(self, db_session: AsyncSession, test_song: Song):
+    async def test_get_song_by_id_wrong_owner(
+        self, db_session: AsyncSession, test_song: Song
+    ):
         """Test getting song by ID with wrong owner returns None."""
         music_service = MusicService(db_session)
         wrong_owner_id = uuid4()
@@ -290,7 +294,9 @@ class TestMusicService:
         assert songs == []
         assert total == 0
 
-    async def test_get_songs_with_song(self, db_session: AsyncSession, test_song: Song, test_user: User):
+    async def test_get_songs_with_song(
+        self, db_session: AsyncSession, test_song: Song, test_user: User
+    ):
         """Test getting songs when one exists."""
         music_service = MusicService(db_session)
         filters = SongFilters()
@@ -300,7 +306,9 @@ class TestMusicService:
         assert total == 1
         assert songs[0].id == test_song.id
 
-    async def test_get_songs_with_search(self, db_session: AsyncSession, test_song: Song, test_user: User):
+    async def test_get_songs_with_search(
+        self, db_session: AsyncSession, test_song: Song, test_user: User
+    ):
         """Test getting songs with search filter."""
         music_service = MusicService(db_session)
 
@@ -319,7 +327,9 @@ class TestMusicService:
         songs, total = await music_service.get_songs(test_user.id, filters)
         assert len(songs) == 0
 
-    async def test_get_songs_with_artist_filter(self, db_session: AsyncSession, test_song: Song, test_user: User):
+    async def test_get_songs_with_artist_filter(
+        self, db_session: AsyncSession, test_song: Song, test_user: User
+    ):
         """Test getting songs with artist filter."""
         music_service = MusicService(db_session)
 
@@ -331,17 +341,23 @@ class TestMusicService:
         songs, total = await music_service.get_songs(test_user.id, filters)
         assert len(songs) == 0
 
-    async def test_update_song(self, db_session: AsyncSession, test_song: Song, test_user: User):
+    async def test_update_song(
+        self, db_session: AsyncSession, test_song: Song, test_user: User
+    ):
         """Test updating song metadata."""
         music_service = MusicService(db_session)
         update_data = SongUpdate(title="Updated Title", artist="Updated Artist")
 
-        updated_song = await music_service.update_song(test_song.id, test_user.id, update_data)
+        updated_song = await music_service.update_song(
+            test_song.id, test_user.id, update_data
+        )
 
         assert updated_song.title == "Updated Title"
         assert updated_song.artist == "Updated Artist"
 
-    async def test_update_song_not_found(self, db_session: AsyncSession, test_user: User):
+    async def test_update_song_not_found(
+        self, db_session: AsyncSession, test_user: User
+    ):
         """Test updating non-existent song raises error."""
         music_service = MusicService(db_session)
         update_data = SongUpdate(title="Updated Title")
@@ -349,7 +365,13 @@ class TestMusicService:
         with pytest.raises(SongNotFoundError):
             await music_service.update_song(uuid4(), test_user.id, update_data)
 
-    async def test_delete_song(self, db_session: AsyncSession, test_song: Song, test_user: User, temp_upload_dir):
+    async def test_delete_song(
+        self,
+        db_session: AsyncSession,
+        test_song: Song,
+        test_user: User,
+        temp_upload_dir,
+    ):
         """Test deleting a song."""
         # Create a fake file
         test_song.file_path = str(Path(temp_upload_dir) / "test.mp3")
@@ -364,14 +386,18 @@ class TestMusicService:
         song = await music_service.get_song_by_id(test_song.id, test_user.id)
         assert song is None
 
-    async def test_delete_song_not_found(self, db_session: AsyncSession, test_user: User):
+    async def test_delete_song_not_found(
+        self, db_session: AsyncSession, test_user: User
+    ):
         """Test deleting non-existent song raises error."""
         music_service = MusicService(db_session)
 
         with pytest.raises(SongNotFoundError):
             await music_service.delete_song(uuid4(), test_user.id)
 
-    async def test_increment_play_count(self, db_session: AsyncSession, test_song: Song, test_user: User):
+    async def test_increment_play_count(
+        self, db_session: AsyncSession, test_song: Song, test_user: User
+    ):
         """Test incrementing play count."""
         music_service = MusicService(db_session)
         initial_count = test_song.play_count
@@ -385,7 +411,9 @@ class TestMusicService:
 class TestSongsEndpoints:
     """Tests for songs API endpoints."""
 
-    async def test_list_songs_empty(self, client: AsyncClient, auth_headers: dict, test_user: User):
+    async def test_list_songs_empty(
+        self, client: AsyncClient, auth_headers: dict, test_user: User
+    ):
         """Test listing songs when none exist."""
         response = await client.get("/api/v1/songs", headers=auth_headers)
 
@@ -394,7 +422,9 @@ class TestSongsEndpoints:
         assert data["items"] == []
         assert data["total"] == 0
 
-    async def test_list_songs_with_song(self, client: AsyncClient, auth_headers: dict, test_song: Song):
+    async def test_list_songs_with_song(
+        self, client: AsyncClient, auth_headers: dict, test_song: Song
+    ):
         """Test listing songs when one exists."""
         response = await client.get("/api/v1/songs", headers=auth_headers)
 
@@ -409,9 +439,13 @@ class TestSongsEndpoints:
 
         assert response.status_code in (401, 403)
 
-    async def test_get_song(self, client: AsyncClient, auth_headers: dict, test_song: Song):
+    async def test_get_song(
+        self, client: AsyncClient, auth_headers: dict, test_song: Song
+    ):
         """Test getting song details."""
-        response = await client.get(f"/api/v1/songs/{test_song.id}", headers=auth_headers)
+        response = await client.get(
+            f"/api/v1/songs/{test_song.id}", headers=auth_headers
+        )
 
         assert response.status_code == 200
         data = response.json()
@@ -425,7 +459,9 @@ class TestSongsEndpoints:
 
         assert response.status_code == 404
 
-    async def test_update_song(self, client: AsyncClient, auth_headers: dict, test_song: Song):
+    async def test_update_song(
+        self, client: AsyncClient, auth_headers: dict, test_song: Song
+    ):
         """Test updating song metadata."""
         response = await client.patch(
             f"/api/v1/songs/{test_song.id}",
@@ -449,7 +485,14 @@ class TestSongsEndpoints:
 
         assert response.status_code == 404
 
-    async def test_delete_song(self, client: AsyncClient, auth_headers: dict, test_song: Song, temp_upload_dir, db_session: AsyncSession):
+    async def test_delete_song(
+        self,
+        client: AsyncClient,
+        auth_headers: dict,
+        test_song: Song,
+        temp_upload_dir,
+        db_session: AsyncSession,
+    ):
         """Test deleting a song."""
         # Create a fake file for the song
         test_song.file_path = str(Path(temp_upload_dir) / "test.mp3")
@@ -457,10 +500,12 @@ class TestSongsEndpoints:
         await db_session.flush()
 
         with (
-            patch.object(StorageService, '__init__', lambda *args, **kwargs: None),
-            patch.object(StorageService, 'delete_file', new_callable=AsyncMock),
+            patch.object(StorageService, "__init__", lambda *args, **kwargs: None),
+            patch.object(StorageService, "delete_file", new_callable=AsyncMock),
         ):
-            response = await client.delete(f"/api/v1/songs/{test_song.id}", headers=auth_headers)
+            response = await client.delete(
+                f"/api/v1/songs/{test_song.id}", headers=auth_headers
+            )
 
         assert response.status_code == 204
 
@@ -471,7 +516,13 @@ class TestSongsEndpoints:
 
         assert response.status_code == 404
 
-    async def test_list_songs_with_pagination(self, client: AsyncClient, auth_headers: dict, db_session: AsyncSession, test_user: User):
+    async def test_list_songs_with_pagination(
+        self,
+        client: AsyncClient,
+        auth_headers: dict,
+        db_session: AsyncSession,
+        test_user: User,
+    ):
         """Test songs pagination."""
         # Create multiple songs
         for i in range(25):
@@ -488,7 +539,9 @@ class TestSongsEndpoints:
         await db_session.flush()
 
         # Get first page
-        response = await client.get("/api/v1/songs?page=1&limit=10", headers=auth_headers)
+        response = await client.get(
+            "/api/v1/songs?page=1&limit=10", headers=auth_headers
+        )
         assert response.status_code == 200
         data = response.json()
         assert len(data["items"]) == 10
@@ -497,12 +550,20 @@ class TestSongsEndpoints:
         assert data["pages"] == 3
 
         # Get second page
-        response = await client.get("/api/v1/songs?page=2&limit=10", headers=auth_headers)
+        response = await client.get(
+            "/api/v1/songs?page=2&limit=10", headers=auth_headers
+        )
         data = response.json()
         assert len(data["items"]) == 10
         assert data["page"] == 2
 
-    async def test_list_songs_with_filters(self, client: AsyncClient, auth_headers: dict, db_session: AsyncSession, test_user: User):
+    async def test_list_songs_with_filters(
+        self,
+        client: AsyncClient,
+        auth_headers: dict,
+        db_session: AsyncSession,
+        test_user: User,
+    ):
         """Test songs filtering."""
         # Create songs with different attributes
         song1 = Song(
@@ -540,7 +601,9 @@ class TestSongsEndpoints:
         assert data["items"][0]["genre"] == "Rock"
 
         # Filter by favorite
-        response = await client.get("/api/v1/songs?is_favorite=true", headers=auth_headers)
+        response = await client.get(
+            "/api/v1/songs?is_favorite=true", headers=auth_headers
+        )
         data = response.json()
         assert len(data["items"]) == 1
         assert data["items"][0]["is_favorite"] is True
@@ -551,15 +614,21 @@ class TestSongsEndpoints:
         assert len(data["items"]) == 1
         assert data["items"][0]["title"] == "Pop Song"
 
-    async def test_get_song_cover_not_found(self, client: AsyncClient, auth_headers: dict, test_song: Song):
+    async def test_get_song_cover_not_found(
+        self, client: AsyncClient, auth_headers: dict, test_song: Song
+    ):
         """Test getting song cover when song has no cover."""
-        response = await client.get(f"/api/v1/songs/{test_song.id}/cover", headers=auth_headers)
+        response = await client.get(
+            f"/api/v1/songs/{test_song.id}/cover", headers=auth_headers
+        )
 
         assert response.status_code == 404
 
     async def test_stream_song_not_found(self, client: AsyncClient, auth_headers: dict):
         """Test streaming non-existent song returns 404."""
         fake_id = uuid4()
-        response = await client.get(f"/api/v1/songs/{fake_id}/stream", headers=auth_headers)
+        response = await client.get(
+            f"/api/v1/songs/{fake_id}/stream", headers=auth_headers
+        )
 
         assert response.status_code == 404

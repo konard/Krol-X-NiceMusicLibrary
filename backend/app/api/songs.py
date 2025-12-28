@@ -147,10 +147,12 @@ async def upload_songs_batch(
                 )
             )
         except (UnsupportedFormatError, UploadError) as e:
-            errors.append({
-                "filename": file.filename or "unknown",
-                "error": str(e),
-            })
+            errors.append(
+                {
+                    "filename": file.filename or "unknown",
+                    "error": str(e),
+                }
+            )
 
     return SongBatchUploadResponse(
         songs=songs,
@@ -172,7 +174,9 @@ async def list_songs(
     db: Annotated[AsyncSession, Depends(get_db)],
     page: Annotated[int, Query(ge=1)] = 1,
     limit: Annotated[int, Query(ge=1, le=100)] = 20,
-    search: Annotated[str | None, Query(description="Search in title, artist, album")] = None,
+    search: Annotated[
+        str | None, Query(description="Search in title, artist, album")
+    ] = None,
     artist: Annotated[str | None, Query(description="Filter by artist")] = None,
     album: Annotated[str | None, Query(description="Filter by album")] = None,
     genre: Annotated[str | None, Query(description="Filter by genre")] = None,
@@ -186,7 +190,9 @@ async def list_songs(
             pattern=r"^(title|artist|album|created_at|play_count|last_played_at)$",
         ),
     ] = "created_at",
-    order: Annotated[str, Query(description="Sort order", pattern=r"^(asc|desc)$")] = "desc",
+    order: Annotated[
+        str, Query(description="Sort order", pattern=r"^(asc|desc)$")
+    ] = "desc",
 ) -> SongListResponse:
     """List songs with pagination and filters.
 
